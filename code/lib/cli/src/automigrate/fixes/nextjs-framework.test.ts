@@ -158,6 +158,26 @@ describe('nextjs-framework fix', () => {
       );
     });
 
-    it.todo('should just warn for @storybook/react-vite users');
+    it('should warn for @storybook/react-vite users', async () => {
+      const consoleSpy = jest.spyOn(console, 'info');
+      const packageJson = {
+        dependencies: {
+          '@storybook/react': '^7.0.0-alpha.0',
+          '@storybook/react-vite': '^7.0.0-alpha.0',
+          next: '^12.0.0',
+          'storybook-addon-next': '^1.0.0',
+        },
+      };
+      await expect(
+        checkNextjsFramework({
+          packageJson,
+          main: {
+            framework: { name: '@storybook/react-vite' },
+          },
+        })
+      ).resolves.toBeFalsy();
+
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Vite builder'));
+    });
   });
 });

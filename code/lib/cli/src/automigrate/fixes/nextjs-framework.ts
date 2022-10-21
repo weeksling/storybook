@@ -85,6 +85,23 @@ export const nextjsFramework: Fix<NextjsFrameworkRunOptions> = {
 
     const frameworkPackageName =
       typeof frameworkPackage === 'string' ? frameworkPackage : frameworkPackage.name;
+
+    if (frameworkPackageName === '@storybook/react-vite') {
+      logger.info(dedent`
+        We've detected you are using Storybook in a Next.js project.
+
+        In Storybook 7, we introduced a new framework package for Next.js projects: @storybook/nextjs.
+
+        This package provides a better experience for Next.js users, however it is only compatible with the webpack 5 builder, so we can't automigrate for you, as you are using the Vite builder.
+        
+        If you are interested in using this package, see: ${chalk.yellow(
+          'https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#nextjs-framework'
+        )}
+      `);
+
+      return null;
+    }
+
     // we only migrate from react-webpack5 projects
     if (frameworkPackageName !== '@storybook/react-webpack5') {
       return null;
