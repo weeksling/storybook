@@ -178,10 +178,9 @@ export const nextjsFramework: Fix<NextjsFrameworkRunOptions> = {
     logger.info(`✅ Installing new dependencies: @storybook/nextjs`);
     if (!dryRun) {
       const versionToInstall = getStorybookVersionSpecifier(packageJson);
-      packageManager.addDependencies(
-        { installAsDevDependencies: true, skipInstall: true, packageJson },
-        [`@storybook/nextjs@${versionToInstall}`]
-      );
+      packageManager.addDependencies({ installAsDevDependencies: true, packageJson }, [
+        `@storybook/nextjs@${versionToInstall}`,
+      ]);
     }
 
     logger.info(`✅ Updating framework field in main.js`);
