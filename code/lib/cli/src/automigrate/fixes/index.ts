@@ -7,6 +7,7 @@ import { eslintPlugin } from './eslint-plugin';
 import { builderVite } from './builder-vite';
 import { npm7 } from './npm7';
 import { sbScripts } from './sb-scripts';
+import { nextjsFramework } from './nextjs-framework';
 import { newFrameworks } from './new-frameworks';
 import { removedGlobalClientAPIs } from './remove-global-client-apis';
 import { Fix } from '../types';
@@ -25,4 +26,5 @@ export const fixes: Fix[] = [
   sbScripts,
   newFrameworks,
   removedGlobalClientAPIs,
+  nextjsFramework,
 ];
