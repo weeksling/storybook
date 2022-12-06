@@ -1,4 +1,4 @@
-import type { Options } from '@storybook/types';
+import type { Options, Preset, StorybookConfig } from '@storybook/types';
 import type { Plugin } from 'vite';
 import { createFilter } from 'vite';
 
@@ -9,6 +9,15 @@ function injectRenderer(code: string) {
            import React from 'react';
            ${code}
            `;
+}
+
+type AddonWithOptions = Exclude<Preset, string>;
+function getAddonOptions(addons: StorybookConfig['addons'], name: string): Record<string, any> {
+  return (
+    addons?.find(
+      (addon): addon is AddonWithOptions => typeof addon !== 'string' && addon.name === name
+    )?.options ?? {}
+  );
 }
 
 /**
@@ -46,19 +55,19 @@ export function mdxPlugin(options: Options): Plugin {
       if (!filter(id)) return undefined;
 
       const { compile } = await import('@storybook/mdx2-csf');
+      const addons = await options.presets.apply('addons', [] as StorybookConfig['addons']);
+      const { mdxPluginOptions } = getAddonOptions(addons, '@storybook/addon-docs');
 
       const mdxLoaderOptions = await options.presets.apply('mdxLoaderOptions', {
+        skipCsf: !isStorybookMdx(id),
+        ...mdxPluginOptions,
         mdxCompileOptions: {
           providerImportSource: '@storybook/addon-docs/mdx-react-shim',
+          ...mdxPluginOptions?.mdxCompileOptions,
         },
       });
 
-      const mdxCode = String(
-        await compile(src, {
-          skipCsf: !isStorybookMdx(id),
-          ...mdxLoaderOptions,
-        })
-      );
+      const mdxCode = String(await compile(src, mdxLoaderOptions));
 
       const modifiedCode = injectRenderer(mdxCode);
 

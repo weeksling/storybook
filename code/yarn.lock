@@ -6633,11 +6633,11 @@ __metadata:
   linkType: soft
 
 "@storybook/mdx2-csf@npm:next":
-  version: 0.1.0-next.7
-  resolution: "@storybook/mdx2-csf@npm:0.1.0-next.7"
+  version: 0.1.0-next.8
+  resolution: "@storybook/mdx2-csf@npm:0.1.0-next.8"
   dependencies:
     loader-utils: ^2.0.4
-  checksum: c0d3b6c5d2261079ac8db0e2bb8e773ab11f6f363c60f4d4b76332c1361c981d5abffd49ea6f2e1b67f5d1fbdfc121e207044fe52b8be1e8322cacc42e41f747
+  checksum: 7126e80489a3aa59ea14a4262e190ee31bfd2a362b9fd73cad565ca0d1ca41bba7f28ece940df4ba8419290d4a6e21b3d25cd6f69d6bcd0b728d992c93fea103
   languageName: node
   linkType: hard
 

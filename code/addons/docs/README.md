@@ -143,6 +143,7 @@ module.exports = {
         configureJSX: true,
         babelOptions: {},
         csfPluginOptions: null,
+        mdxPluginOptions: {},
         transcludeMarkdown: true,
       },
     },

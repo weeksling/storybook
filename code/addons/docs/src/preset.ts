@@ -5,6 +5,7 @@ import { dedent } from 'ts-dedent';
 
 import type { IndexerOptions, StoryIndexer, DocsOptions, Options } from '@storybook/types';
 import type { CsfPluginOptions } from '@storybook/csf-plugin';
+import type { CompileOptions } from '@storybook/mdx2-csf';
 import { loadCsf } from '@storybook/csf-tools';
 
 // for frameworks that are not working with react, we need to configure
@@ -46,6 +47,7 @@ async function webpack(
       /** @deprecated */
       sourceLoaderOptions: any;
       csfPluginOptions: CsfPluginOptions | null;
+      mdxPluginOptions?: CompileOptions;
       transcludeMarkdown: boolean;
     } /* & Parameters<
       typeof createCompiler
@@ -61,15 +63,22 @@ async function webpack(
     mdxBabelOptions,
     configureJSX = true,
     csfPluginOptions = {},
+    mdxPluginOptions = {},
     sourceLoaderOptions = null,
     transcludeMarkdown = false,
   } = options;
 
-  const mdxLoaderOptions = await options.presets.apply('mdxLoaderOptions', {
+  const mdxLoaderOptions: CompileOptions = await options.presets.apply('mdxLoaderOptions', {
     skipCsf: true,
+    ...mdxPluginOptions,
     mdxCompileOptions: {
       providerImportSource: '@storybook/addon-docs/mdx-react-shim',
-      remarkPlugins: [remarkSlug, remarkExternalLinks],
+      // @ts-expect-error CompileOptions type is wrong
+      ...mdxPluginOptions.mdxCompileOptions,
+      remarkPlugins: [remarkSlug, remarkExternalLinks].concat(
+        // @ts-expect-error CompileOptions type is wrong
+        mdxPluginOptions?.mdxCompileOptions?.remarkPlugins ?? []
+      ),
     },
   });
 
