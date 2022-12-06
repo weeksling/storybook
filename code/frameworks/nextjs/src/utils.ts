@@ -45,13 +45,7 @@ export const resolveNextConfig = async ({
   const nextConfigFile = nextConfigPath || (await findNextConfigFile(configDir));
 
   if (!nextConfigFile || (await pathExists(nextConfigFile)) === false) {
-    throw new Error(
-      dedent`
-        Could not find or resolve your Next config file. Please provide the next config file path as a framework option.
-
-        More info: https://github.com/storybookjs/storybook/blob/next/code/frameworks/nextjs/README.md#options
-      `
-    );
+    return {};
   }
 
   const nextConfigExport = await import(pathToFileURL(nextConfigFile).href);
