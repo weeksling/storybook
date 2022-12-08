@@ -1,19 +1,19 @@
 /* eslint-disable prefer-destructuring */
-import { start } from '@storybook/core-client';
-import type { ClientStoryApi, Loadable } from '@storybook/addons';
+import type { Addon_ClientStoryApi, Addon_Loadable } from '@storybook/types';
+import { start } from '@storybook/preview-api';
 
-import { renderToDOM } from './render';
-import type { WebComponentsFramework } from './types';
+import { renderToCanvas } from './render';
+import type { WebComponentsRenderer } from './types';
 
 const FRAMEWORK = 'web-components';
 
-interface ClientApi extends ClientStoryApi<WebComponentsFramework['storyResult']> {
-  configure(loader: Loadable, module: NodeModule): void;
+interface ClientApi extends Addon_ClientStoryApi<WebComponentsRenderer['storyResult']> {
+  configure(loader: Addon_Loadable, module: NodeModule): void;
   forceReRender(): void;
   raw: () => any; // todo add type
 }
 
-const api = start(renderToDOM);
+const api = start<WebComponentsRenderer>(renderToCanvas);
 
 export const storiesOf: ClientApi['storiesOf'] = (kind, m) => {
   return (api.clientApi.storiesOf(kind, m) as ReturnType<ClientApi['storiesOf']>).addParameters({

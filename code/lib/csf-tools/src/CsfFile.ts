@@ -1,26 +1,17 @@
 /* eslint-disable no-underscore-dangle */
 import fs from 'fs-extra';
 import { dedent } from 'ts-dedent';
+
 import * as t from '@babel/types';
-import generate from '@babel/generator';
-import traverse from '@babel/traverse';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as generate from '@babel/generator';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as traverse from '@babel/traverse';
 import { toId, isExportStory, storyNameFromExport } from '@storybook/csf';
+import type { Tag, StoryAnnotations, ComponentAnnotations } from '@storybook/types';
 import { babelParse } from './babelParse';
 
 const logger = console;
-interface Meta {
-  id?: string;
-  title?: string;
-  component?: string;
-  includeStories?: string[] | RegExp;
-  excludeStories?: string[] | RegExp;
-}
-
-interface Story {
-  id: string;
-  name: string;
-  parameters: Record<string, any>;
-}
 
 function parseIncludeExclude(prop: t.Node) {
   if (t.isArrayExpression(prop)) {
@@ -35,6 +26,17 @@ function parseIncludeExclude(prop: t.Node) {
   if (t.isRegExpLiteral(prop)) return new RegExp(prop.pattern, prop.flags);
 
   throw new Error(`Unknown include/exclude: ${prop}`);
+}
+
+function parseTags(prop: t.Node) {
+  if (!t.isArrayExpression(prop)) {
+    throw new Error('CSF: Expected tags array');
+  }
+
+  return prop.elements.map((e) => {
+    if (t.isStringLiteral(e)) return e.value;
+    throw new Error(`CSF: Expected tag to be string literal`);
+  }) as Tag[];
 }
 
 const findVarInitialization = (identifier: string, program: t.Program) => {
@@ -139,6 +141,19 @@ export class NoMetaError extends Error {
     this.name = this.constructor.name;
   }
 }
+
+export interface StaticMeta
+  extends Pick<
+    ComponentAnnotations,
+    'id' | 'title' | 'includeStories' | 'excludeStories' | 'tags'
+  > {
+  component?: string;
+}
+
+export interface StaticStory extends Pick<StoryAnnotations, 'name' | 'parameters' | 'tags'> {
+  id: string;
+}
+
 export class CsfFile {
   _ast: t.File;
 
@@ -146,13 +161,15 @@ export class CsfFile {
 
   _makeTitle: (title: string) => string;
 
-  _meta?: Meta;
+  _meta?: StaticMeta;
 
-  _stories: Record<string, Story> = {};
+  _stories: Record<string, StaticStory> = {};
 
   _metaAnnotations: Record<string, t.Node> = {};
 
   _storyExports: Record<string, t.VariableDeclarator | t.FunctionDeclaration> = {};
+
+  _storyStatements: Record<string, t.ExportNamedDeclaration> = {};
 
   _storyAnnotations: Record<string, Record<string, t.Node>> = {};
 
@@ -182,7 +199,7 @@ export class CsfFile {
   }
 
   _parseMeta(declaration: t.ObjectExpression, program: t.Program) {
-    const meta: Meta = {};
+    const meta: StaticMeta = {};
     declaration.properties.forEach((p: t.ObjectProperty) => {
       if (t.isIdentifier(p.key)) {
         this._metaAnnotations[p.key.name] = p.value;
@@ -193,8 +210,14 @@ export class CsfFile {
           // @ts-expect-error (Converted from ts-ignore)
           meta[p.key.name] = parseIncludeExclude(p.value);
         } else if (p.key.name === 'component') {
-          const { code } = generate(p.value, {});
+          const { code } = generate.default(p.value, {});
           meta.component = code;
+        } else if (p.key.name === 'tags') {
+          let node = p.value;
+          if (t.isIdentifier(node)) {
+            node = findVarInitialization(node.name, this._ast.program);
+          }
+          meta.tags = parseTags(node);
         } else if (p.key.name === 'id') {
           if (t.isStringLiteral(p.value)) {
             meta.id = p.value.value;
@@ -207,10 +230,32 @@ export class CsfFile {
     this._meta = meta;
   }
 
+  getStoryExport(key: string) {
+    let node = this._storyExports[key] as t.Node;
+    node = t.isVariableDeclarator(node) ? node.init : node;
+    if (t.isCallExpression(node)) {
+      const { callee, arguments: bindArguments } = node;
+      if (
+        t.isMemberExpression(callee) &&
+        t.isIdentifier(callee.object) &&
+        t.isIdentifier(callee.property) &&
+        callee.property.name === 'bind' &&
+        (bindArguments.length === 0 ||
+          (bindArguments.length === 1 &&
+            t.isObjectExpression(bindArguments[0]) &&
+            bindArguments[0].properties.length === 0))
+      ) {
+        const { name } = callee.object;
+        node = this._templates[name];
+      }
+    }
+    return node;
+  }
+
   parse() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    traverse(this._ast, {
+    traverse.default(this._ast, {
       ExportDefaultDeclaration: {
         enter({ node, parent }) {
           let metaNode: t.ObjectExpression;
@@ -224,7 +269,7 @@ export class CsfFile {
             metaNode = decl;
           } else if (
             // export default { ... } as Meta<...>
-            t.isTSAsExpression(decl) &&
+            (t.isTSAsExpression(decl) || t.isTSSatisfiesExpression(decl)) &&
             t.isObjectExpression(decl.expression)
           ) {
             metaNode = decl.expression;
@@ -253,6 +298,7 @@ export class CsfFile {
                   return;
                 }
                 self._storyExports[exportName] = decl;
+                self._storyStatements[exportName] = node;
                 let name = storyNameFromExport(exportName);
                 if (self._storyAnnotations[exportName]) {
                   logger.warn(
@@ -263,6 +309,7 @@ export class CsfFile {
                 }
                 let parameters;
                 if (t.isVariableDeclarator(decl) && t.isObjectExpression(decl.init)) {
+                  // eslint-disable-next-line @typescript-eslint/naming-convention
                   let __isArgsStory = true; // assume default render is an args story
                   // CSF3 object export
                   decl.init.properties.forEach((p: t.ObjectProperty) => {
@@ -415,9 +462,16 @@ export class CsfFile {
           parameters.docsOnly = true;
         }
         acc[key] = { ...story, id, parameters };
+        const { tags } = self._storyAnnotations[key];
+        if (tags) {
+          const node = t.isIdentifier(tags)
+            ? findVarInitialization(tags.name, this._ast.program)
+            : tags;
+          acc[key].tags = parseTags(node);
+        }
       }
       return acc;
-    }, {} as Record<string, Story>);
+    }, {} as Record<string, StaticStory>);
 
     Object.keys(self._storyExports).forEach((key) => {
       if (!isExportStory(key, self._meta)) {
@@ -459,7 +513,7 @@ export const loadCsf = (code: string, options: CsfOptions) => {
 };
 
 export const formatCsf = (csf: CsfFile) => {
-  const { code } = generate(csf._ast, {});
+  const { code } = generate.default(csf._ast, {});
   return code;
 };
 

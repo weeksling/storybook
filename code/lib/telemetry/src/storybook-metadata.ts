@@ -6,12 +6,13 @@ import {
   getStorybookConfiguration,
   getProjectRoot,
 } from '@storybook/core-common';
-import type { StorybookConfig, PackageJson } from '@storybook/core-common';
+import type { StorybookConfig, PackageJson } from '@storybook/types';
 
 import type { StorybookMetadata, Dependency, StorybookAddon } from './types';
-import { getActualPackageVersion, getActualPackageVersions } from './package-versions';
+import { getActualPackageVersion, getActualPackageVersions } from './package-json';
 import { getMonorepoType } from './get-monorepo-type';
 import { cleanPaths } from './sanitize';
+import { getFrameworkInfo } from './get-framework-info';
 
 export const metaFrameworks = {
   next: 'Next',
@@ -20,33 +21,8 @@ export const metaFrameworks = {
   '@nuxtjs/storybook': 'nuxt',
   '@nrwl/storybook': 'nx',
   '@vue/cli-service': 'vue-cli',
-  '@sveltejs/kit': 'svelte-kit',
+  '@sveltejs/kit': 'sveltekit',
 } as Record<string, string>;
-
-// @TODO: This should be removed in 7.0 as the framework.options field in main.js will replace this
-const getFrameworkOptions = (mainConfig: any) => {
-  const possibleOptions = [
-    'angular',
-    'ember',
-    'html',
-    'preact',
-    'react',
-    'server',
-    'svelte',
-    'vue',
-    'vue3',
-    'webComponents',
-  ].map((opt) => `${opt}Options`);
-
-  // eslint-disable-next-line no-restricted-syntax
-  for (const opt of possibleOptions) {
-    if (opt in mainConfig) {
-      return mainConfig[opt] as any;
-    }
-  }
-
-  return undefined;
-};
 
 export const sanitizeAddonName = (name: string) => {
   return cleanPaths(name)
@@ -68,7 +44,6 @@ export const computeStorybookMetadata = async ({
 }): Promise<StorybookMetadata> => {
   const metadata: Partial<StorybookMetadata> = {
     generatedAt: new Date().getTime(),
-    builder: { name: 'webpack5' },
     hasCustomBabel: false,
     hasCustomWebpack: false,
     hasStaticDirs: false,
@@ -118,14 +93,7 @@ export const computeStorybookMetadata = async ({
     metadata.typescriptOptions = mainConfig.typescript;
   }
 
-  if (mainConfig.core?.builder) {
-    const { builder } = mainConfig.core;
-
-    metadata.builder = {
-      name: typeof builder === 'string' ? builder : builder.name,
-      options: typeof builder === 'string' ? undefined : builder?.options ?? undefined,
-    };
-  }
+  const frameworkInfo = await getFrameworkInfo(mainConfig);
 
   if (mainConfig.refs) {
     metadata.refCount = Object.keys(mainConfig.refs).length;
@@ -181,22 +149,16 @@ export const computeStorybookMetadata = async ({
 
   const hasStorybookEslint = !!allDependencies['eslint-plugin-storybook'];
 
-  // FIXME: resolve framework/renderer split in 7.0
-  //        OR should be getting this from mainConfig instead?
   const storybookInfo = getStorybookInfo(packageJson);
-
-  const storybookVersion =
-    storybookPackages[storybookInfo.frameworkPackage]?.version || storybookInfo.version;
+  const storybookVersion = storybookPackages[storybookInfo.frameworkPackage]?.version;
 
   return {
     ...metadata,
+    ...frameworkInfo,
     storybookVersion,
+    storybookVersionSpecifier: storybookInfo.version,
     language,
     storybookPackages,
-    framework: {
-      name: storybookInfo.framework,
-      options: getFrameworkOptions(mainConfig),
-    },
     addons,
     hasStorybookEslint,
   };

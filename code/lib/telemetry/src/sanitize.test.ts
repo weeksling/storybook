@@ -4,7 +4,7 @@ describe(`Errors Helpers`, () => {
   describe(`sanitizeError`, () => {
     it(`Sanitizes current path from error stacktraces`, () => {
       const errorMessage = `this is a test`;
-      let e;
+      let e: any;
       try {
         throw new Error(errorMessage);
       } catch (error) {
@@ -18,7 +18,7 @@ describe(`Errors Helpers`, () => {
 
       expect(sanitizedError.message).toEqual(expect.stringContaining(errorMessage));
       expect(sanitizedError.message).toEqual(
-        expect.not.stringContaining(process.cwd().replaceAll(`\\`, `\\\\`))
+        expect.not.stringContaining(process.cwd().replace(/\\/g, `\\\\`))
       );
     });
 

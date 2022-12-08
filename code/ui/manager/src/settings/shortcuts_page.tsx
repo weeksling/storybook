@@ -1,6 +1,7 @@
-import React, { FC } from 'react';
+import type { FC } from 'react';
+import React from 'react';
 
-import { Consumer } from '@storybook/api';
+import { Consumer } from '@storybook/manager-api';
 
 import { ShortcutsScreen } from './shortcuts';
 

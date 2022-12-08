@@ -14,19 +14,11 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "strictBindCallApply": true,
-    "types": ["jest"],
-    "lib": ["dom", "esnext"]
+    "lib": ["dom", "esnext"],
+    "noUnusedLocals": true,
+    "types": ["jest"]
   },
-  "exclude": [
-    "dist",
-    "**/dist",
-    "node_modules",
-    "**/node_modules",
-    "**/*.spec.ts",
-    "**/__tests__",
-    "**/*.test.ts",
-    "**/setup-jest.ts"
-  ],
+  "exclude": ["dist", "**/dist", "node_modules", "**/node_modules", "**/setup-jest.ts"],
   "ts-node": {
     "transpileOnly": true,
     "files": true,

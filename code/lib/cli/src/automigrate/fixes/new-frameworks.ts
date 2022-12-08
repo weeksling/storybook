@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import dedent from 'ts-dedent';
 import semver from 'semver';
-import { ConfigFile, readConfig, writeConfig } from '@storybook/csf-tools';
+import type { ConfigFile } from '@storybook/csf-tools';
+import { readConfig, writeConfig } from '@storybook/csf-tools';
 import { getStorybookInfo } from '@storybook/core-common';
 
 import type { Fix } from '../types';
@@ -43,6 +44,7 @@ const packagesMap: Record<string, { webpack5?: string; vite?: string }> = {
   },
   '@storybook/html': {
     webpack5: '@storybook/html-webpack5',
+    vite: '@storybook/html-vite',
   },
 };
 
@@ -68,7 +70,20 @@ export const getBuilder = (builder: string | { name: string }) => {
 };
 
 export const getFrameworkOptions = (framework: string, main: ConfigFile) => {
-  const frameworkOptions = main.getFieldValue([`${framework}Options`]);
+  let frameworkOptions = {};
+  try {
+    frameworkOptions = main.getFieldValue([`${framework}Options`]);
+  } catch (e) {
+    logger.warn(dedent`
+      Unable to get the ${framework}Options field.
+      
+      Please review the changes made to your main.js config and make any necessary changes.
+      The ${framework}Options should be moved to the framework.options field.
+
+      The following error occurred when we tried to get the ${framework}Options field:
+    `);
+    console.log(e);
+  }
   return frameworkOptions || {};
 };
 

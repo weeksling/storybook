@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/naming-convention
 enum events {
   CHANNEL_CREATED = 'channelCreated',
   // There was an error executing the config, likely an bug in the user's preview.js
@@ -8,8 +9,10 @@ enum events {
   STORY_SPECIFIED = 'storySpecified',
   // Emitted by Provider.setOptions is called from an manager-addon or manager.js file
   SET_CONFIG = 'setConfig',
-  // Emitted by the preview whenever the list of stories changes (in batches)
+  // Emitted by the preview whenever the list of stories changes (in batches) - legacy pre-7.0 event
   SET_STORIES = 'setStories',
+  // Emitted by the preview whenever the list of entries changes - legacy event for v6 store
+  SET_INDEX = 'setIndex',
   // Set the current story selection in the preview
   SET_CURRENT_STORY = 'setCurrentStory',
   // The current story changed due to the above
@@ -48,6 +51,8 @@ enum events {
   REGISTER_SUBSCRIPTION = 'registerSubscription',
   // Tell the manager that the user pressed a key in the preview
   PREVIEW_KEYDOWN = 'previewKeydown',
+  // Tell the preview that the builder is in progress
+  PREVIEW_BUILDER_PROGRESS = 'preview_builder_progress',
   // Used in the manager to change the story selection
   SELECT_STORY = 'selectStory',
   STORIES_COLLAPSE_ALL = 'storiesCollapseAll',
@@ -67,40 +72,42 @@ export default events;
 export const {
   CHANNEL_CREATED,
   CONFIG_ERROR,
-  STORY_INDEX_INVALIDATED,
-  STORY_SPECIFIED,
-  SET_STORIES,
-  SET_CONFIG,
-  SET_CURRENT_STORY,
   CURRENT_STORY_WAS_SET,
+  DOCS_RENDERED,
   FORCE_RE_RENDER,
   FORCE_REMOUNT,
-  STORY_PREPARED,
-  STORY_CHANGED,
-  STORY_UNCHANGED,
-  PRELOAD_ENTRIES,
-  STORY_RENDERED,
-  STORY_MISSING,
-  STORY_ERRORED,
-  STORY_THREW_EXCEPTION,
-  STORY_RENDER_PHASE_CHANGED,
-  PLAY_FUNCTION_THREW_EXCEPTION,
-  UPDATE_STORY_ARGS,
-  STORY_ARGS_UPDATED,
-  RESET_STORY_ARGS,
-  SET_GLOBALS,
-  UPDATE_GLOBALS,
   GLOBALS_UPDATED,
-  REGISTER_SUBSCRIPTION,
+  NAVIGATE_URL,
+  PLAY_FUNCTION_THREW_EXCEPTION,
+  PRELOAD_ENTRIES,
+  PREVIEW_BUILDER_PROGRESS,
   PREVIEW_KEYDOWN,
+  REGISTER_SUBSCRIPTION,
+  RESET_STORY_ARGS,
   SELECT_STORY,
-  STORIES_COLLAPSE_ALL,
-  STORIES_EXPAND_ALL,
-  DOCS_RENDERED,
+  SET_CONFIG,
+  SET_CURRENT_STORY,
+  SET_GLOBALS,
+  SET_INDEX,
+  SET_STORIES,
   SHARED_STATE_CHANGED,
   SHARED_STATE_SET,
-  NAVIGATE_URL,
+  STORIES_COLLAPSE_ALL,
+  STORIES_EXPAND_ALL,
+  STORY_ARGS_UPDATED,
+  STORY_CHANGED,
+  STORY_ERRORED,
+  STORY_INDEX_INVALIDATED,
+  STORY_MISSING,
+  STORY_PREPARED,
+  STORY_RENDER_PHASE_CHANGED,
+  STORY_RENDERED,
+  STORY_SPECIFIED,
+  STORY_THREW_EXCEPTION,
+  STORY_UNCHANGED,
+  UPDATE_GLOBALS,
   UPDATE_QUERY_PARAMS,
+  UPDATE_STORY_ARGS,
 } = events;
 
 // Used to break out of the current render without showing a redbox

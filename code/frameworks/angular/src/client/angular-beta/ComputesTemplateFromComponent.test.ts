@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import type { ArgTypes } from '@storybook/api';
+import { ArgTypes } from '@storybook/types';
 import { computesTemplateSourceFromComponent } from './ComputesTemplateFromComponent';
-import { ButtonAccent, InputComponent, ISomeInterface } from './__testfixtures__/input.component';
+import { ISomeInterface, ButtonAccent, InputComponent } from './__testfixtures__/input.component';
 
 describe('angular source decorator', () => {
   it('With no props should generate simple tag', () => {
@@ -324,7 +324,7 @@ describe('angular source decorator', () => {
           type: {
             name: 'enum',
             required: true,
-            summary: 'ButtonAccent',
+            value: [],
           },
         },
       };
@@ -354,6 +354,7 @@ describe('angular source decorator', () => {
           type: {
             name: 'object',
             required: true,
+            value: {},
           },
         },
       };

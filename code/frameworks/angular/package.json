@@ -1,6 +1,6 @@
 {
   "name": "@storybook/angular",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Storybook for Angular: Develop Angular components in isolation with hot reloading.",
   "keywords": [
     "storybook",
@@ -20,45 +20,43 @@
     "url": "https://opencollective.com/storybook"
   },
   "license": "MIT",
-  "main": "dist/types/index.js",
-  "module": "dist/types/index.js",
-  "types": "dist/types/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist/**/*",
+    "template/**/*",
     "README.md",
     "*.js",
     "*.d.ts"
   ],
   "scripts": {
-    "check": "../../../scripts/node_modules/.bin/tsc --noEmit",
-    "prep": "node ../../../scripts/prepare.js"
+    "check": "../../../scripts/node_modules/.bin/tsc",
+    "prep": "rimraf dist && ../../../scripts/node_modules/.bin/tsc --project tsconfig.build.json && echo \"Preventing passing flags to tsc\""
   },
   "dependencies": {
-    "@storybook/addons": "7.0.0-alpha.40",
-    "@storybook/api": "7.0.0-alpha.40",
-    "@storybook/builder-webpack5": "7.0.0-alpha.40",
-    "@storybook/client-logger": "7.0.0-alpha.40",
-    "@storybook/core-client": "7.0.0-alpha.40",
-    "@storybook/core-common": "7.0.0-alpha.40",
-    "@storybook/core-events": "7.0.0-alpha.40",
-    "@storybook/core-server": "7.0.0-alpha.40",
-    "@storybook/core-webpack": "7.0.0-alpha.40",
-    "@storybook/csf": "0.0.2--canary.49.258942b.0",
-    "@storybook/docs-tools": "7.0.0-alpha.40",
-    "@storybook/node-logger": "7.0.0-alpha.40",
-    "@storybook/store": "7.0.0-alpha.40",
+    "@storybook/builder-webpack5": "7.0.0-beta.0",
+    "@storybook/client-logger": "7.0.0-beta.0",
+    "@storybook/core-client": "7.0.0-beta.0",
+    "@storybook/core-common": "7.0.0-beta.0",
+    "@storybook/core-events": "7.0.0-beta.0",
+    "@storybook/core-server": "7.0.0-beta.0",
+    "@storybook/core-webpack": "7.0.0-beta.0",
+    "@storybook/docs-tools": "7.0.0-beta.0",
+    "@storybook/manager-api": "7.0.0-beta.0",
+    "@storybook/node-logger": "7.0.0-beta.0",
+    "@storybook/preview-api": "7.0.0-beta.0",
+    "@storybook/types": "7.0.0-beta.0",
     "@types/node": "^16.0.0",
-    "@types/react": "^16.14.23",
+    "@types/react": "^16.14.34",
     "@types/react-dom": "^16.9.14",
     "@types/semver": "^7.3.4",
+    "@types/webpack-env": "^1.18.0",
     "core-js": "^3.8.2",
     "find-up": "^5.0.0",
     "global": "^4.4.0",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
     "read-pkg-up": "^7.0.1",
     "semver": "^7.3.7",
-    "telejson": "^6.0.8",
+    "telejson": "^7.0.3",
     "ts-dedent": "^2.0.0",
     "tsconfig-paths-webpack-plugin": "^3.5.2",
     "util-deprecate": "^1.0.2",
@@ -77,15 +75,17 @@
     "@angular/platform-browser": "^13.3.6",
     "@angular/platform-browser-dynamic": "^13.3.6",
     "@nrwl/workspace": "14.6.1",
+    "@types/rimraf": "^3.0.2",
     "@types/tmp": "^0.2.3",
     "cross-spawn": "^7.0.3",
-    "jest": "^27.5.1",
+    "jest": "^29.3.1",
     "jest-preset-angular": "^12.0.0",
-    "jest-specific-snapshot": "^5.0.0",
+    "jest-specific-snapshot": "^7.0.0",
+    "rimraf": "^3.0.2",
     "tmp": "^0.2.1",
-    "typescript": "~4.6.3",
+    "typescript": "~4.9.3",
     "webpack": "5",
-    "zone.js": "^0.11.0"
+    "zone.js": "^0.12.0"
   },
   "peerDependencies": {
     "@angular-devkit/architect": ">=0.1300.0",
@@ -101,9 +101,11 @@
     "@angular/platform-browser-dynamic": ">=13.0.0",
     "@babel/core": "*",
     "@nrwl/workspace": "14.6.1",
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0",
     "rxjs": "^6.0.0 || ^7.4.0",
     "typescript": "^4.0.0",
-    "zone.js": "^0.8.29 || ^0.9.0 || ^0.10.0 || ^0.11.0"
+    "zone.js": "^0.8.29 || >= 0.9.0 < 1.0.0"
   },
   "peerDependenciesMeta": {
     "@angular/cli": {
@@ -119,6 +121,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "builders": "dist/types/builders/builders.json",
-  "gitHead": "8f6d8629f1ad7e776c39e2c7621f4a0d538aa93c"
+  "builders": "dist/builders/builders.json",
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70"
 }

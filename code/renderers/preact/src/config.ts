@@ -1,3 +1,5 @@
-export { renderToDOM, render } from './render';
+import { parameters as docsParams } from './docs/config';
 
-export const parameters = { framework: 'preact' as const };
+export { renderToCanvas, render } from './render';
+
+export const parameters = { framework: 'preact' as const, ...docsParams };

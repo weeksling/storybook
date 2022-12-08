@@ -1,5 +1,5 @@
 import React from 'react';
-import { Call, CallStates } from '@storybook/instrumenter';
+import { type Call, CallStates } from '@storybook/instrumenter';
 import { styled, typography } from '@storybook/theming';
 
 export interface StatusBadgeProps {
@@ -35,5 +35,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     [CallStates.ACTIVE]: 'Runs',
     [CallStates.WAITING]: 'Runs',
   }[status];
-  return <StyledBadge status={status}>{badgeText}</StyledBadge>;
+  return (
+    <StyledBadge aria-label="Status of the test run" status={status}>
+      {badgeText}
+    </StyledBadge>
+  );
 };

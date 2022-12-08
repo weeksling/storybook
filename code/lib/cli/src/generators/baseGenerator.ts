@@ -1,13 +1,16 @@
+import path from 'path';
 import fse from 'fs-extra';
 import { dedent } from 'ts-dedent';
-import { NpmOptions } from '../NpmOptions';
-import { SupportedRenderers, SupportedFrameworks, Builder, CoreBuilder } from '../project_types';
+import type { NpmOptions } from '../NpmOptions';
+import type { SupportedRenderers, SupportedFrameworks, Builder } from '../project_types';
+import { CoreBuilder } from '../project_types';
 import { getBabelDependencies, copyComponents } from '../helpers';
 import { configureMain, configurePreview } from './configure';
-import { getPackageDetails, JsPackageManager } from '../js-package-manager';
+import type { JsPackageManager } from '../js-package-manager';
+import { getPackageDetails } from '../js-package-manager';
 import { generateStorybookBabelConfigInCWD } from '../babel-config';
 import packageVersions from '../versions';
-import { FrameworkOptions, GeneratorOptions } from './types';
+import type { FrameworkOptions, GeneratorOptions } from './types';
 
 const defaultOptions: FrameworkOptions = {
   extraPackages: [],
@@ -98,7 +101,7 @@ const hasInteractiveStories = (rendererId: SupportedRenderers) =>
   ['react', 'angular', 'preact', 'svelte', 'vue', 'vue3', 'html'].includes(rendererId);
 
 const hasFrameworkTemplates = (framework?: SupportedFrameworks) =>
-  ['angular', 'nextjs'].includes(framework);
+  ['angular', 'nextjs', 'sveltekit'].includes(framework);
 
 export async function baseGenerator(
   packageManager: JsPackageManager,
@@ -126,7 +129,6 @@ export async function baseGenerator(
   const {
     packages: frameworkPackages,
     type,
-    renderer: rendererInclude, // deepscan-disable-line UNUSED_DECL
     rendererId,
     framework: frameworkInclude,
     builder: builderInclude,
@@ -142,6 +144,7 @@ export async function baseGenerator(
   const addonPackages = [
     '@storybook/addon-links',
     '@storybook/addon-essentials',
+    '@storybook/blocks',
     ...extraAddonPackages,
   ];
 
@@ -150,14 +153,21 @@ export async function baseGenerator(
     addonPackages.push('@storybook/addon-interactions', '@storybook/testing-library');
   }
 
-  const yarn2ExtraPackages = packageManager.type === 'yarn2' ? ['@storybook/addon-docs'] : [];
-
   const files = await fse.readdir(process.cwd());
 
   const packageJson = packageManager.retrievePackageJson();
   const installedDependencies = new Set(
     Object.keys({ ...packageJson.dependencies, ...packageJson.devDependencies })
   );
+
+  if (!installedDependencies.has('react')) {
+    // we add these here because they are required by addon-essentials > addon-docs
+    addonPackages.push('react');
+  }
+  if (!installedDependencies.has('react-dom')) {
+    // we add these here because they are required by addon-essentials > addon-docs
+    addonPackages.push('react-dom');
+  }
 
   // TODO: We need to start supporting this at some point
   if (type === 'renderer') {
@@ -176,7 +186,6 @@ export async function baseGenerator(
     ...frameworkPackages,
     ...addonPackages,
     ...extraPackages,
-    ...yarn2ExtraPackages,
   ]
     .filter(Boolean)
     .filter(
@@ -189,9 +198,11 @@ export async function baseGenerator(
 
   await configureMain({
     framework: { name: frameworkInclude, options: options.framework || {} },
+    docs: { docsPage: true },
     addons: pnp ? addons.map(wrapForPnp) : addons,
     extensions,
     commonJs,
+    ...(staticDir ? { staticDirs: [path.join('..', staticDir)] } : null),
     ...extraMain,
     ...(type !== 'framework'
       ? {
@@ -204,13 +215,12 @@ export async function baseGenerator(
 
   await configurePreview(rendererId);
 
-  if (addComponents) {
-    const templateLocation = hasFrameworkTemplates(framework) ? framework : rendererId;
-    await copyComponents(templateLocation, language);
-  }
-
   // FIXME: temporary workaround for https://github.com/storybookjs/storybook/issues/17516
-  if (frameworkPackages.find((pkg) => pkg.match(/^@storybook\/.*-vite$/))) {
+  if (
+    frameworkPackages.find(
+      (pkg) => pkg.match(/^@storybook\/.*-vite$/) || pkg === '@storybook/sveltekit'
+    )
+  ) {
     const previewHead = dedent`
       <script>
         window.global = window;
@@ -237,11 +247,15 @@ export async function baseGenerator(
   if (addScripts) {
     packageManager.addStorybookCommandInScripts({
       port: 6006,
-      staticFolder: staticDir,
     });
   }
 
   if (addESLint) {
     packageManager.addESLintConfig();
+  }
+
+  if (addComponents) {
+    const templateLocation = hasFrameworkTemplates(framework) ? framework : rendererId;
+    await copyComponents(templateLocation, language);
   }
 }

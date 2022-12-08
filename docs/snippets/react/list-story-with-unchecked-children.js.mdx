@@ -10,17 +10,16 @@ import { Unchecked } from './ListItem.stories';
 
 export default {
   /* 👇 The title prop is optional.
-  * See https://storybook.js.org/docs/7.0/react/configure/overview#configure-story-loading
-  * to learn how to generate automatic titles
-  */
+   * See https://storybook.js.org/docs/7.0/react/configure/overview#configure-story-loading
+   * to learn how to generate automatic titles
+   */
   title: 'List',
   component: List,
 };
 
-const Template = (args) => <List {...args} />;
-
-export const OneItem = Template.bind({});
-OneItem.args = {
-  children: <Unchecked {...Unchecked.args} />,
+export const OneItem = {
+  args: {
+    children: <Unchecked {...Unchecked.args} />,
+  },
 };
 ```

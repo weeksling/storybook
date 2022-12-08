@@ -1,15 +1,14 @@
 /* eslint-disable no-underscore-dangle */
 import { dedent } from 'ts-dedent';
 import Vue from 'vue';
-import type { RenderContext } from '@storybook/store';
-import type { ArgsStoryFn } from '@storybook/csf';
-import { CombinedVueInstance } from 'vue/types/vue';
-import type { VueFramework } from './types';
+import type { RenderContext, ArgsStoryFn } from '@storybook/types';
+import type { CombinedVueInstance } from 'vue/types/vue';
+import type { VueRenderer } from './types';
 
 export const COMPONENT = 'STORYBOOK_COMPONENT';
 export const VALUES = 'STORYBOOK_VALUES';
 
-const map = new Map<Element, Instance>();
+const map = new Map<VueRenderer['canvasElement'], Instance>();
 type Instance = CombinedVueInstance<
   Vue,
   {
@@ -18,22 +17,21 @@ type Instance = CombinedVueInstance<
   },
   object,
   object,
-  Record<never, any>,
-  unknown
+  Record<never, any>
 >;
-const getRoot = (domElement: Element): Instance => {
-  if (map.has(domElement)) {
-    return map.get(domElement);
-  }
+
+const getRoot = (canvasElement: VueRenderer['canvasElement']): Instance => {
+  const cachedInstance = map.get(canvasElement);
+  if (cachedInstance != null) return cachedInstance;
 
   // Create a dummy "target" underneath #storybook-root
   // that Vue2 will replace on first render with #storybook-vue-root
   const target = document.createElement('div');
-  domElement.appendChild(target);
+  canvasElement.appendChild(target);
 
-  const instance = new Vue({
+  const instance: Instance = new Vue({
     beforeDestroy() {
-      map.delete(domElement);
+      map.delete(canvasElement);
     },
     data() {
       return {
@@ -41,19 +39,19 @@ const getRoot = (domElement: Element): Instance => {
         [VALUES]: {},
       };
     },
-    // @ts-expect-error What's going on here?
+    // @ts-expect-error What's going on here? (TS says that we should not return an array here, but the `h` directly)
     render(h) {
-      map.set(domElement, instance);
+      map.set(canvasElement, instance);
       return this[COMPONENT] ? [h(this[COMPONENT])] : undefined;
     },
-  }) as Instance;
+  });
 
   return instance;
 };
 
-export const render: ArgsStoryFn<VueFramework> = (args, context) => {
+export const render: ArgsStoryFn<VueRenderer> = (args, context) => {
   const { id, component: Component, argTypes } = context;
-  const component = Component as VueFramework['component'] & {
+  const component = Component as VueRenderer['component'] & {
     __docgenInfo?: { displayName: string };
     props: Record<string, any>;
   };
@@ -84,7 +82,7 @@ export const render: ArgsStoryFn<VueFramework> = (args, context) => {
   };
 };
 
-export function renderToDOM(
+export function renderToCanvas(
   {
     title,
     name,
@@ -93,25 +91,25 @@ export function renderToDOM(
     showError,
     showException,
     forceRemount,
-  }: RenderContext<VueFramework>,
-  domElement: Element
+  }: RenderContext<VueRenderer>,
+  canvasElement: VueRenderer['canvasElement']
 ) {
-  const root = getRoot(domElement);
+  const root = getRoot(canvasElement);
   Vue.config.errorHandler = showException;
   const element = storyFn();
 
-  let mountTarget: Element;
+  let mountTarget: Element | VueRenderer['canvasElement'] | null;
 
   // Vue2 mount always replaces the mount target with Vue-generated DOM.
   // https://v2.vuejs.org/v2/api/#el:~:text=replaced%20with%20Vue%2Dgenerated%20DOM
-  // We cannot mount to the domElement directly, because it would be replaced. That would
-  // break the references to the domElement like canvasElement used in the play function.
-  // Instead, we mount to a child element of the domElement, creating one if necessary.
-  if (domElement.hasChildNodes()) {
-    mountTarget = domElement.firstElementChild;
+  // We cannot mount to the canvasElement directly, because it would be replaced. That would
+  // break the references to the canvasElement like canvasElement used in the play function.
+  // Instead, we mount to a child element of the canvasElement, creating one if necessary.
+  if (canvasElement.hasChildNodes()) {
+    mountTarget = canvasElement.firstElementChild;
   } else {
     mountTarget = document.createElement('div');
-    domElement.appendChild(mountTarget);
+    canvasElement.appendChild(mountTarget);
   }
 
   if (!element) {
@@ -133,8 +131,8 @@ export function renderToDOM(
   // @ts-expect-error https://github.com/storybookjs/storrybook/pull/7578#discussion_r307986139
   root[VALUES] = { ...element.options[VALUES] };
 
-  if (!map.has(domElement)) {
-    root.$mount(mountTarget);
+  if (!map.has(canvasElement)) {
+    root.$mount(mountTarget ?? undefined);
   }
 
   showMain();

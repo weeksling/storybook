@@ -4,22 +4,27 @@ import glob from 'globby';
 import slash from 'slash';
 
 import type {
+  IndexEntry,
+  StandaloneDocsIndexEntry,
+  StoryIndexEntry,
+  TemplateDocsIndexEntry,
+  ComponentTitle,
+  NormalizedStoriesSpecifier,
+  StoryIndexer,
+  DocsOptions,
   Path,
+  Tag,
   StoryIndex,
   V2CompatIndexEntry,
   StoryId,
-  IndexEntry,
-  StoryIndexEntry,
-  StandaloneDocsIndexEntry,
-  TemplateDocsIndexEntry,
-} from '@storybook/store';
-import { userOrAutoTitleFromSpecifier, sortStoriesV7 } from '@storybook/store';
-import type { StoryIndexer, NormalizedStoriesSpecifier, DocsOptions } from '@storybook/core-common';
+  StoryName,
+} from '@storybook/types';
+import { userOrAutoTitleFromSpecifier, sortStoriesV7 } from '@storybook/preview-api';
 import { normalizeStoryPath } from '@storybook/core-common';
 import { logger } from '@storybook/node-logger';
 import { getStorySortParameter, NoMetaError } from '@storybook/csf-tools';
-import type { ComponentTitle, StoryName } from '@storybook/csf';
 import { toId } from '@storybook/csf';
+import { analyze } from '@storybook/docs-mdx';
 
 /** A .mdx file will produce a "standalone" docs entry */
 type DocsCacheEntry = StandaloneDocsIndexEntry;
@@ -31,6 +36,16 @@ type StoriesCacheEntry = {
 };
 type CacheEntry = false | StoriesCacheEntry | DocsCacheEntry;
 type SpecifierStoriesCache = Record<Path, CacheEntry>;
+
+export class DuplicateEntriesError extends Error {
+  entries: IndexEntry[];
+
+  constructor(message: string, entries: IndexEntry[]) {
+    super();
+    this.message = message;
+    this.entries = entries;
+  }
+}
 
 const makeAbsolute = (otherImport: Path, normalizedPath: Path, workingDir: Path) =>
   otherImport.startsWith('.')
@@ -211,16 +226,22 @@ export class StoryIndexGenerator {
       }
       const csf = await storyIndexer.indexer(absolutePath, { makeTitle });
 
-      csf.stories.forEach(({ id, name, parameters }) => {
+      const componentTags = csf.meta.tags || [];
+      csf.stories.forEach(({ id, name, tags: storyTags, parameters }) => {
         if (!parameters?.docsOnly) {
-          entries.push({ id, title: csf.meta.title, name, importPath, type: 'story' });
+          const tags = [...(storyTags || componentTags), 'story'];
+          entries.push({ id, title: csf.meta.title, name, importPath, tags, type: 'story' });
         }
       });
 
       if (this.options.docs.enabled && csf.stories.length) {
-        // We always add a template for *.stories.mdx, but only if docs page is enabled for
-        // regular CSF files
-        if (storyIndexer.addDocsTemplate || this.options.docs.docsPage) {
+        const { docsPage } = this.options.docs;
+        const docsPageOptedIn =
+          docsPage === 'automatic' || (docsPage && componentTags.includes('docsPage'));
+        // We need a docs entry attached to the CSF file if either:
+        //  a) it is a stories.mdx transpiled to CSF, OR
+        //  b) we have docs page enabled for this file
+        if (componentTags.includes('mdx') || docsPageOptedIn) {
           const name = this.options.docs.defaultName;
           const id = toId(csf.meta.title, name);
           entries.unshift({
@@ -229,6 +250,7 @@ export class StoryIndexGenerator {
             name,
             importPath,
             type: 'docs',
+            tags: [...componentTags, 'docs'],
             storiesImports: [],
             standalone: false,
           });
@@ -255,21 +277,15 @@ export class StoryIndexGenerator {
       const normalizedPath = normalizeStoryPath(relativePath);
       const importPath = slash(normalizedPath);
 
-      // This `await require(...)` is a bit of a hack. It's necessary because
-      // `docs-mdx` depends on ESM code, which must be asynchronously imported
-      // to be used in CJS. Unfortunately, we cannot use `import()` here, because
-      // it will be transpiled down to `require()` by Babel. So instead, we require
-      // a CJS export from `@storybook/docs-mdx` that does the `async import` for us.
-
-      // eslint-disable-next-line global-require
-      const { analyze } = await require('@storybook/docs-mdx');
       const content = await fs.readFile(absolutePath, 'utf8');
+
       const result: {
         title?: ComponentTitle;
         of?: Path;
         name?: StoryName;
         isTemplate?: boolean;
         imports?: Path[];
+        tags?: Tag[];
       } = analyze(content);
 
       // Templates are not indexed
@@ -281,7 +297,7 @@ export class StoryIndexGenerator {
 
       // Go through the cache and collect all of the cache entries that this docs file depends on.
       // We'll use this to make sure this docs cache entry is invalidated when any of its dependents
-      // are invalidated.
+      // are invalidated.f
       const dependencies = this.findDependencies(absoluteImports);
 
       // Also, if `result.of` is set, it means that we're using the `<Meta of={XStories} />` syntax,
@@ -292,7 +308,12 @@ export class StoryIndexGenerator {
         dependencies.forEach((dep) => {
           if (dep.entries.length > 0) {
             const first = dep.entries[0];
-            if (path.resolve(this.options.workingDir, first.importPath).startsWith(absoluteOf)) {
+
+            if (
+              path
+                .normalize(path.resolve(this.options.workingDir, first.importPath))
+                .startsWith(path.normalize(absoluteOf))
+            ) {
               ofTitle = first.title;
             }
           }
@@ -318,6 +339,7 @@ export class StoryIndexGenerator {
         importPath,
         storiesImports: dependencies.map((dep) => dep.entries[0].importPath),
         type: 'docs',
+        tags: [...(result.tags || []), 'docs', 'mdx'],
         standalone: true,
       };
       return docsEntry;
@@ -340,7 +362,11 @@ export class StoryIndexGenerator {
     const changeDocsName = 'Use `<Meta of={} name="Other Name">` to distinguish them.';
 
     // This shouldn't be possible, but double check and use for typing
-    if (worseEntry.type === 'story') throw new Error(`Duplicate stories with id: ${firstEntry.id}`);
+    if (worseEntry.type === 'story')
+      throw new DuplicateEntriesError(`Duplicate stories with id: ${firstEntry.id}`, [
+        firstEntry,
+        secondEntry,
+      ]);
 
     if (betterEntry.type === 'story') {
       const worseDescriptor = worseEntry.standalone
@@ -472,11 +498,6 @@ export class StoryIndexGenerator {
           }
         });
       });
-
-      const notFound = dependents.filter((dep) => !invalidated.has(dep));
-      if (notFound.length > 0) {
-        throw new Error(`Could not invalidate ${notFound.length} deps: ${notFound.join(', ')}`);
-      }
     }
 
     if (removed) {

@@ -1,18 +1,19 @@
 import fs from 'fs';
 import path from 'path';
-import type { NormalizedStoriesSpecifier, StoriesEntry } from '@storybook/core-common';
+import type {
+  Renderer,
+  ArgsEnhancer,
+  ArgTypesEnhancer,
+  NormalizedStoriesSpecifier,
+  StoriesEntry,
+  DecoratorFunction,
+} from '@storybook/types';
 import { toRequireContext } from '@storybook/core-webpack';
 import { normalizeStoriesEntry } from '@storybook/core-common';
 import registerRequireContextHook from '@storybook/babel-plugin-require-context-hook/register';
 import global from 'global';
-import type {
-  AnyFramework,
-  ArgsEnhancer,
-  ArgTypesEnhancer,
-  DecoratorFunction,
-} from '@storybook/csf';
 
-import { ClientApi } from './Loader';
+import type { ClientApi } from './Loader';
 import type { StoryshotsOptions } from '../api/StoryshotsOptions';
 
 registerRequireContextHook();
@@ -32,7 +33,7 @@ interface Output {
   requireContexts?: string[];
 }
 
-const supportedExtensions = ['ts', 'tsx', 'js', 'jsx'];
+const supportedExtensions = ['ts', 'tsx', 'js', 'jsx', 'cjs', 'mjs'];
 
 const resolveFile = (configDir: string, supportedFilenames: string[]) =>
   supportedFilenames
@@ -86,9 +87,9 @@ function getConfigPathParts(input: string): Output {
   return { preview: configDir };
 }
 
-function configure<TFramework extends AnyFramework>(
+function configure<TRenderer extends Renderer>(
   options: {
-    storybook: ClientApi<TFramework>;
+    storybook: ClientApi<TRenderer>;
   } & StoryshotsOptions
 ): void {
   const { configPath = '.storybook', config, storybook } = options;
@@ -124,7 +125,7 @@ function configure<TFramework extends AnyFramework>(
     } = jest.requireActual(preview);
 
     if (decorators) {
-      decorators.forEach((decorator: DecoratorFunction<TFramework>) =>
+      decorators.forEach((decorator: DecoratorFunction<TRenderer>) =>
         storybook.addDecorator(decorator)
       );
     }
@@ -135,12 +136,12 @@ function configure<TFramework extends AnyFramework>(
       storybook.addStepRunner(runStep);
     }
     if (argsEnhancers) {
-      argsEnhancers.forEach((enhancer: ArgsEnhancer<TFramework>) =>
+      argsEnhancers.forEach((enhancer: ArgsEnhancer<TRenderer>) =>
         storybook.addArgsEnhancer(enhancer as any)
       );
     }
     if (argTypesEnhancers) {
-      argTypesEnhancers.forEach((enhancer: ArgTypesEnhancer<TFramework>) =>
+      argTypesEnhancers.forEach((enhancer: ArgTypesEnhancer<TRenderer>) =>
         storybook.addArgTypesEnhancer(enhancer as any)
       );
     }

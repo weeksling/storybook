@@ -1,10 +1,17 @@
-/* eslint-disable camelcase */
-import React, { Fragment, useMemo, useEffect, useRef } from 'react';
+import React, { Fragment, useMemo, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import global from 'global';
 
-import { type API, Consumer, type Combo, merge } from '@storybook/api';
-import { SET_CURRENT_STORY } from '@storybook/core-events';
-import { addons, types, type Addon } from '@storybook/addons';
+import {
+  type API,
+  Consumer,
+  type Combo,
+  merge,
+  addons,
+  types,
+  type Addon,
+} from '@storybook/manager-api';
+import { PREVIEW_BUILDER_PROGRESS, SET_CURRENT_STORY } from '@storybook/core-events';
 
 import { Loader } from '@storybook/components';
 import { Location } from '@storybook/router';
@@ -15,7 +22,7 @@ import { defaultWrappers, ApplyWrappers } from './wrappers';
 import { ToolbarComp } from './toolbar';
 import { FramesRenderer } from './FramesRenderer';
 
-import { PreviewProps } from './utils/types';
+import type { PreviewProps } from './utils/types';
 
 const getWrappers = (getFn: API['getElements']) => Object.values(getFn<Addon>(types.PREVIEW));
 const getTabs = (getFn: API['getElements']) => Object.values(getFn<Addon>(types.TAB));
@@ -60,9 +67,23 @@ const createCanvas = (id: string, baseUrl = 'iframe.html', withLoader = true): A
             [getElements, ...defaultWrappers]
           );
 
+          const [progress, setProgress] = useState(undefined);
+
+          useEffect(() => {
+            if (global.CONFIG_TYPE === 'DEVELOPMENT') {
+              const channel = addons.getServerChannel();
+
+              channel.on(PREVIEW_BUILDER_PROGRESS, (options) => {
+                setProgress(options);
+              });
+            }
+          }, []);
+
+          const refLoading = !!refs[refId] && !refs[refId].ready;
+          const rootLoading = !refId && !(progress?.value === 1 || progress === undefined);
           const isLoading = entry
-            ? !!refs[refId] && !refs[refId].ready
-            : !storiesFailed && !storiesConfigured;
+            ? refLoading || rootLoading
+            : (!storiesFailed && !storiesConfigured) || rootLoading;
 
           return (
             <ZoomConsumer>
@@ -71,7 +92,7 @@ const createCanvas = (id: string, baseUrl = 'iframe.html', withLoader = true): A
                   <>
                     {withLoader && isLoading && (
                       <S.LoaderWrapper>
-                        <Loader id="preview-loader" role="progressbar" />
+                        <Loader id="preview-loader" role="progressbar" progress={progress} />
                       </S.LoaderWrapper>
                     )}
                     <ApplyWrappers
@@ -131,7 +152,7 @@ const useTabs = (
   }, [entry, canvas, ...tabsFromConfig]);
 };
 
-const Preview = React.memo<PreviewProps>((props) => {
+const Preview = React.memo<PreviewProps>(function Preview(props) {
   const {
     api,
     id: previewId,
@@ -223,6 +244,7 @@ function filterTabs(panels: Addon[], parameters: Record<string, any>) {
       })
       .map((panel, index) => ({ ...panel, index } as Addon))
       .sort((p1, p2) => {
+        /* eslint-disable @typescript-eslint/naming-convention */
         const tab_1 = arrTabs.find((tab) => tab.id === p1.id);
         // @ts-expect-error (Converted from ts-ignore)
         const index_1 = tab_1 ? tab_1.index : arrTabs.length + p1.index;
@@ -230,6 +252,7 @@ function filterTabs(panels: Addon[], parameters: Record<string, any>) {
         // @ts-expect-error (Converted from ts-ignore)
         const index_2 = tab_2 ? tab_2.index : arrTabs.length + p2.index;
         return index_1 - index_2;
+        /* eslint-enable @typescript-eslint/naming-convention */
       })
       .map((panel) => {
         const t = arrTabs.find((tab) => tab.id === panel.id);

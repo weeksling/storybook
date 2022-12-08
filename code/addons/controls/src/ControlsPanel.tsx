@@ -1,19 +1,20 @@
-import React, { FC } from 'react';
+import type { FC } from 'react';
+import React from 'react';
 import {
-  ArgTypes,
   useArgs,
   useGlobals,
   useArgTypes,
   useParameter,
   useStorybookState,
-} from '@storybook/api';
+} from '@storybook/manager-api';
 import {
   PureArgsTable as ArgsTable,
   NoControlsWarning,
-  PresetColor,
-  SortType,
+  type PresetColor,
+  type SortType,
 } from '@storybook/blocks';
 
+import type { ArgTypes } from '@storybook/types';
 import { PARAM_KEY } from './constants';
 
 interface ControlsParameters {

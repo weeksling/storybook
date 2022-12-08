@@ -1,5 +1,5 @@
 import { logger } from '@storybook/node-logger';
-import type { Options, StorybookConfig } from '@storybook/core-common';
+import type { Options, StorybookConfig } from '@storybook/types';
 import { getDirectoryFromWorkingDir } from '@storybook/core-common';
 import chalk from 'chalk';
 import express from 'express';
@@ -9,7 +9,7 @@ import favicon from 'serve-favicon';
 
 import { dedent } from 'ts-dedent';
 
-const defaultFavIcon = require.resolve('@storybook/core-server/public/favicon.ico');
+const defaultFavIcon = require.resolve('@storybook/core-server/public/favicon.svg');
 
 export async function useStatics(router: any, options: Options) {
   let hasCustomFavicon = false;
@@ -47,7 +47,7 @@ export async function useStatics(router: any, options: Options) {
           router.use(targetEndpoint, express.static(staticPath, { index: false }));
 
           if (!hasCustomFavicon && targetEndpoint === '/') {
-            const faviconPath = path.join(staticPath, 'favicon.ico');
+            const faviconPath = path.join(staticPath, 'favicon.svg');
             if (await pathExists(faviconPath)) {
               hasCustomFavicon = true;
               router.use(favicon(faviconPath));

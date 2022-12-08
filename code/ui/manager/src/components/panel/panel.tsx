@@ -1,8 +1,9 @@
-import React, { Component, Fragment, ReactElement } from 'react';
-import { shortcutToHumanString } from '@storybook/api/shortcut';
+import type { ReactElement } from 'react';
+import React, { Component, Fragment } from 'react';
 import { styled } from '@storybook/theming';
 import { Tabs, Icons, IconButton } from '@storybook/components';
-import type { State } from '@storybook/api';
+import type { State } from '@storybook/manager-api';
+import { shortcutToHumanString } from '@storybook/manager-api';
 
 const DesktopOnlyIconButton = styled(IconButton)({
   // Hides full screen icon at mobile breakpoint defined in app.js
@@ -17,7 +18,9 @@ export interface SafeTabProps {
   children: ReactElement;
 }
 
-const SafeTabContent = React.memo<SafeTabProps>(({ children }) => children);
+const SafeTabContent = React.memo<SafeTabProps>(function SafeTabContent({ children }) {
+  return children;
+});
 
 class SafeTab extends Component<SafeTabProps, { hasError: boolean }> {
   constructor(props: SafeTabProps) {

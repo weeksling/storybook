@@ -1,9 +1,9 @@
 import React, { memo, useCallback, useEffect } from 'react';
-import { useGlobals, useStorybookApi } from '@storybook/api';
+import { useGlobals, useStorybookApi } from '@storybook/manager-api';
 import { Icons, IconButton } from '@storybook/components';
 import { ADDON_ID, PARAM_KEY } from './constants';
 
-export const OutlineSelector = memo(() => {
+export const OutlineSelector = memo(function OutlineSelector() {
   const [globals, updateGlobals] = useGlobals();
   const api = useStorybookApi();
 

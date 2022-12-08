@@ -17,6 +17,8 @@ It includes additional customization via parameters. Below is a condensed exampl
   paths={[
     'common/component-story-custom-source.js.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/doc-block-source#snippet-component-story-custom-source"
 />
 
 <!-- prettier-ignore-end -->

@@ -1,6 +1,6 @@
 {
   "name": "@storybook/core-client",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Storybook framework-agnostic API",
   "keywords": [
     "storybook"
@@ -21,49 +21,31 @@
   "license": "MIT",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/entry.js",
+      "import": "./dist/entry.mjs",
+      "types": "./dist/entry.d.ts"
     },
     "./package.json": "./package.json"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "dist/entry.js",
+  "module": "dist/entry.mjs",
+  "types": "dist/entry.d.ts",
   "scripts": {
     "check": "../../../scripts/node_modules/.bin/tsc --noEmit",
-    "prep": "../../../scripts/prepare/bundle.ts"
+    "prep": "../../../scripts/prepare/facade.ts"
   },
   "dependencies": {
-    "@storybook/addons": "7.0.0-alpha.40",
-    "@storybook/channel-postmessage": "7.0.0-alpha.40",
-    "@storybook/channel-websocket": "7.0.0-alpha.40",
-    "@storybook/client-api": "7.0.0-alpha.40",
-    "@storybook/client-logger": "7.0.0-alpha.40",
-    "@storybook/core-events": "7.0.0-alpha.40",
-    "@storybook/csf": "0.0.2--canary.49.258942b.0",
-    "@storybook/preview-web": "7.0.0-alpha.40",
-    "@storybook/store": "7.0.0-alpha.40",
-    "@storybook/ui": "7.0.0-alpha.40",
-    "global": "^4.4.0",
-    "regenerator-runtime": "^0.13.7",
-    "util-deprecate": "^1.0.2"
-  },
-  "devDependencies": {
-    "typescript": "~4.6.3"
-  },
-  "peerDependenciesMeta": {
-    "typescript": {
-      "optional": true
-    }
+    "@storybook/client-logger": "7.0.0-beta.0",
+    "@storybook/preview-api": "7.0.0-beta.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "bundler": {
     "entries": [
-      "./src/index.ts"
-    ]
+      "./src/entry.ts"
+    ],
+    "shim": "@storybook/preview-api/dist/core-client"
   },
-  "gitHead": "8f6d8629f1ad7e776c39e2c7621f4a0d538aa93c"
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70"
 }

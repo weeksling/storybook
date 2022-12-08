@@ -1,18 +1,28 @@
-import React, { Fragment, useMemo, FunctionComponent } from 'react';
+import type { FunctionComponent } from 'react';
+import React, { Fragment, useMemo } from 'react';
 
 import { styled } from '@storybook/theming';
 
 import { FlexBar, IconButton, Icons, Separator, TabButton, TabBar } from '@storybook/components';
-import { Consumer, type Combo, type API, type State, merge, type LeafEntry } from '@storybook/api';
-import { shortcutToHumanString } from '@storybook/api/shortcut';
-import { addons, type Addon, types } from '@storybook/addons';
+import {
+  shortcutToHumanString,
+  Consumer,
+  type Combo,
+  type API,
+  type State,
+  merge,
+  type LeafEntry,
+  addons,
+  type Addon,
+  types,
+} from '@storybook/manager-api';
 
 import { Location, type RenderData } from '@storybook/router';
 import { zoomTool } from './tools/zoom';
 
 import * as S from './utils/components';
 
-import { PreviewProps } from './utils/types';
+import type { PreviewProps } from './utils/types';
 import { copyTool } from './tools/copy';
 import { ejectTool } from './tools/eject';
 import { menuTool } from './tools/menu';
@@ -131,7 +141,7 @@ const useTools = (
   );
 
   return useMemo(() => {
-    return entry?.type === 'story'
+    return ['story', 'docs'].includes(entry?.type)
       ? filterTools(tools, toolsExtra, tabs, {
           viewMode,
           entry,
@@ -150,7 +160,7 @@ export interface ToolData {
 }
 
 export const ToolRes: FunctionComponent<ToolData & RenderData> = React.memo<ToolData & RenderData>(
-  ({ api, entry, tabs, isShown, location, path, viewMode }) => {
+  function ToolRes({ api, entry, tabs, isShown, location, path, viewMode }) {
     const { left, right } = useTools(api.getElements, tabs, viewMode, entry, location, path);
 
     return left || right ? (
@@ -162,20 +172,24 @@ export const ToolRes: FunctionComponent<ToolData & RenderData> = React.memo<Tool
   }
 );
 
-export const ToolbarComp = React.memo<ToolData>((props) => (
-  <Location>
-    {({ location, path, viewMode }) => <ToolRes {...props} {...{ location, path, viewMode }} />}
-  </Location>
-));
+export const ToolbarComp = React.memo<ToolData>(function ToolbarComp(props) {
+  return (
+    <Location>
+      {({ location, path, viewMode }) => <ToolRes {...props} {...{ location, path, viewMode }} />}
+    </Location>
+  );
+});
 
-export const Tools = React.memo<{ list: Addon[] }>(({ list }) => (
-  <>
-    {list.filter(Boolean).map(({ render: Render, id, ...t }, index) => (
-      // @ts-expect-error (Converted from ts-ignore)
-      <Render key={id || t.key || `f-${index}`} />
-    ))}
-  </>
-));
+export const Tools = React.memo<{ list: Addon[] }>(function Tools({ list }) {
+  return (
+    <>
+      {list.filter(Boolean).map(({ render: Render, id, ...t }, index) => (
+        // @ts-expect-error (Converted from ts-ignore)
+        <Render key={id || t.key || `f-${index}`} />
+      ))}
+    </>
+  );
+});
 
 function toolbarItemHasBeenExcluded(item: Partial<Addon>, entry: LeafEntry) {
   const parameters = entry.type === 'story' && entry.prepared ? entry.parameters : {};

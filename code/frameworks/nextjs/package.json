@@ -1,6 +1,6 @@
 {
   "name": "@storybook/nextjs",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Storybook for Next.js",
   "keywords": [
     "storybook",
@@ -48,6 +48,7 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist/**/*",
+    "template/**/*",
     "types/**/*",
     "README.md",
     "*.js",
@@ -58,14 +59,13 @@
     "prep": "../../../scripts/prepare/bundle.ts"
   },
   "dependencies": {
-    "@babel/preset-typescript": "^7.18.6",
-    "@storybook/addons": "7.0.0-alpha.40",
-    "@storybook/builder-webpack5": "7.0.0-alpha.40",
-    "@storybook/core-common": "7.0.0-alpha.40",
-    "@storybook/node-logger": "7.0.0-alpha.40",
-    "@storybook/preset-react-webpack": "7.0.0-alpha.40",
-    "@storybook/react": "7.0.0-alpha.40",
-    "@types/node": "^14.14.20 || ^16.0.0",
+    "@storybook/builder-webpack5": "7.0.0-beta.0",
+    "@storybook/core-common": "7.0.0-beta.0",
+    "@storybook/node-logger": "7.0.0-beta.0",
+    "@storybook/preset-react-webpack": "7.0.0-beta.0",
+    "@storybook/preview-api": "7.0.0-beta.0",
+    "@storybook/react": "7.0.0-beta.0",
+    "@types/node": "^16.0.0",
     "find-up": "^5.0.0",
     "fs-extra": "^9.0.1",
     "image-size": "^1.0.0",
@@ -80,16 +80,15 @@
     "tsconfig-paths-webpack-plugin": "^3.5.2"
   },
   "devDependencies": {
-    "@storybook/addon-actions": "7.0.0-alpha.40",
-    "@types/loader-utils": "^2.0.3",
-    "next": "^12.2.4",
-    "typescript": "~4.6.3",
+    "@storybook/addon-actions": "7.0.0-beta.0",
+    "next": "^13.0.5",
+    "typescript": "^4.9.3",
     "webpack": "^5.65.0"
   },
   "peerDependencies": {
     "@babel/core": "^7.11.5",
-    "@storybook/addon-actions": "7.0.0-alpha.40",
-    "next": "^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0",
+    "@storybook/addon-actions": "7.0.0-alpha.43",
+    "next": "^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0 || ^13.0.0",
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
     "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0",
     "webpack": "^5.0.0"
@@ -119,5 +118,6 @@
       "./src/next-image-loader-stub.ts"
     ],
     "platform": "node"
-  }
+  },
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70"
 }

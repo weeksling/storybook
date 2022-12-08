@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import { dequal as deepEqual } from 'dequal';
 
-import type { API } from '@storybook/api';
+import type { API } from '@storybook/manager-api';
 import { STORY_CHANGED } from '@storybook/core-events';
 
 import { ActionLogger as ActionLoggerComponent } from '../../components/ActionLogger';
 import { EVENT_ID } from '../..';
-import { ActionDisplay } from '../../models';
+import type { ActionDisplay } from '../../models';
 
 interface ActionLoggerProps {
   active: boolean;
@@ -26,6 +26,7 @@ const safeDeepEqual = (a: any, b: any): boolean => {
 };
 
 export default class ActionLogger extends Component<ActionLoggerProps, ActionLoggerState> {
+  // @ts-expect-error Unused, possibly remove, leaving, because it could be accessed even though it is private
   private mounted: boolean;
 
   constructor(props: ActionLoggerProps) {
@@ -36,7 +37,7 @@ export default class ActionLogger extends Component<ActionLoggerProps, ActionLog
     this.state = { actions: [] };
   }
 
-  componentDidMount() {
+  override componentDidMount() {
     this.mounted = true;
     const { api } = this.props;
 
@@ -44,7 +45,7 @@ export default class ActionLogger extends Component<ActionLoggerProps, ActionLog
     api.on(STORY_CHANGED, this.handleStoryChange);
   }
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     this.mounted = false;
     const { api } = this.props;
 
@@ -64,9 +65,11 @@ export default class ActionLogger extends Component<ActionLoggerProps, ActionLog
       const actions = [...prevState.actions];
       const previous = actions.length && actions[0];
       if (previous && safeDeepEqual(previous.data, action.data)) {
-        previous.count++; // eslint-disable-line
+        // eslint-disable-next-line no-plusplus
+        previous.count++;
       } else {
-        action.count = 1; // eslint-disable-line
+        // eslint-disable-next-line no-param-reassign
+        action.count = 1;
         actions.unshift(action);
       }
       return { actions: actions.slice(0, action.options.limit) };
@@ -77,7 +80,7 @@ export default class ActionLogger extends Component<ActionLoggerProps, ActionLog
     this.setState({ actions: [] });
   };
 
-  render() {
+  override render() {
     const { actions = [] } = this.state;
     const { active } = this.props;
     const props = {

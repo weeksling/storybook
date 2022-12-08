@@ -7,7 +7,7 @@ import { sync as readUpSync } from 'read-pkg-up';
 
 import { logger } from '@storybook/node-logger';
 
-import { CommandOptions } from './generators/types';
+import type { CommandOptions } from './generators/types';
 import { initiate } from './initiate';
 import { add } from './add';
 import { migrate } from './migrate';
@@ -25,14 +25,15 @@ import { parseList, getEnvConfig } from './utils';
 const pkg = readUpSync({ cwd: __dirname }).packageJson;
 const consoleLogger = console;
 
-program.option(
-  '--disable-telemetry',
-  'disable sending telemetry data',
-  // default value is false, but if the user sets STORYBOOK_DISABLE_TELEMETRY, it can be true
-  process.env.STORYBOOK_DISABLE_TELEMETRY && process.env.STORYBOOK_DISABLE_TELEMETRY !== 'false'
-);
-
-program.option('--enable-crash-reports', 'enable sending crash reports to telemetry data');
+program
+  .option(
+    '--disable-telemetry',
+    'disable sending telemetry data',
+    // default value is false, but if the user sets STORYBOOK_DISABLE_TELEMETRY, it can be true
+    process.env.STORYBOOK_DISABLE_TELEMETRY && process.env.STORYBOOK_DISABLE_TELEMETRY !== 'false'
+  )
+  .option('--debug', 'Get more logs in debug mode', false)
+  .option('--enable-crash-reports', 'enable sending crash reports to telemetry data');
 
 program
   .command('init')
@@ -80,6 +81,7 @@ program
   .option('-N --use-npm', 'Use NPM to install dependencies (deprecated)')
   .option('-y --yes', 'Skip prompting the user')
   .option('-n --dry-run', 'Only check for upgrades, do not install')
+  .option('-t --tag <tag>', 'Upgrade to a certain npm dist-tag (e.g. next, prerelease)')
   .option('-p --prerelease', 'Upgrade to the pre-release packages')
   .option('-s --skip-check', 'Skip postinstall version and automigration checks')
   .action((options: UpgradeOptions) => upgrade(options));
@@ -161,7 +163,7 @@ program
   .command('repro-next [filterValue]')
   .description('Create a reproduction from a set of possible templates')
   .option('-o --output <outDir>', 'Define an output directory')
-  .option('-b --branch <branch>', 'Define the branch to degit from', 'next')
+  .option('-b --branch <branch>', 'Define the branch to download from', 'next')
   .option('--no-init', 'Whether to download a template without an initialized Storybook', false)
   .action((filterValue, options) =>
     reproNext({ filterValue, ...options }).catch((e) => {
@@ -189,12 +191,12 @@ program
   .option('-n --dry-run', 'Only check for fixes, do not actually run them')
   .option('--package-manager <npm|pnpm|yarn1|yarn2>', 'Force package manager')
   .option('-N --use-npm', 'Use npm as package manager (deprecated)')
-  .action((fixId, options) =>
-    automigrate({ fixId, ...options }).catch((e) => {
+  .action(async (fixId, options) => {
+    await automigrate({ fixId, ...options }).catch((e) => {
       logger.error(e);
       process.exit(1);
-    })
-  );
+    });
+  });
 
 program
   .command('dev')
@@ -291,7 +293,7 @@ program.on('command:*', ([invalidCmd]) => {
     ' Invalid command: %s.\n See --help for a list of available commands.',
     invalidCmd
   );
-  // eslint-disable-next-line
+  // eslint-disable-next-line no-underscore-dangle
   const availableCommands = program.commands.map((cmd) => cmd._name);
   const suggestion = availableCommands.find((cmd) => leven(cmd, invalidCmd) < 3);
   if (suggestion) {

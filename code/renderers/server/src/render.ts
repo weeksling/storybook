@@ -3,10 +3,10 @@
 import global from 'global';
 
 import { dedent } from 'ts-dedent';
-import type { RenderContext } from '@storybook/store';
-import { simulatePageLoad, simulateDOMContentLoaded } from '@storybook/preview-web';
+import type { RenderContext } from '@storybook/types';
+import { simulatePageLoad, simulateDOMContentLoaded } from '@storybook/preview-api';
 import type { StoryFn, Args, ArgTypes } from './public-types';
-import type { FetchStoryHtmlType, ServerFramework } from './types';
+import type { FetchStoryHtmlType, ServerRenderer } from './types';
 
 const { fetch, Node } = global;
 
@@ -42,9 +42,9 @@ const buildStoryArgs = (args: Args, argTypes: ArgTypes) => {
   return storyArgs;
 };
 
-export const render: StoryFn<ServerFramework> = (args: Args) => {};
+export const render: StoryFn<ServerRenderer> = (args: Args) => {};
 
-export async function renderToDOM(
+export async function renderToCanvas(
   {
     id,
     title,
@@ -55,8 +55,8 @@ export async function renderToDOM(
     storyFn,
     storyContext,
     storyContext: { parameters, args, argTypes },
-  }: RenderContext<ServerFramework>,
-  domElement: Element
+  }: RenderContext<ServerRenderer>,
+  canvasElement: ServerRenderer['canvasElement']
 ) {
   // Some addons wrap the storyFn so we need to call it even though Server doesn't need the answer
   storyFn();
@@ -72,16 +72,16 @@ export async function renderToDOM(
 
   showMain();
   if (typeof element === 'string') {
-    domElement.innerHTML = element;
-    simulatePageLoad(domElement);
+    canvasElement.innerHTML = element;
+    simulatePageLoad(canvasElement);
   } else if (element instanceof Node) {
     // Don't re-mount the element if it didn't change and neither did the story
-    if (domElement.firstChild === element && forceRemount === false) {
+    if (canvasElement.firstChild === element && forceRemount === false) {
       return;
     }
 
-    domElement.innerHTML = '';
-    domElement.appendChild(element);
+    canvasElement.innerHTML = '';
+    canvasElement.appendChild(element);
     simulateDOMContentLoaded();
   } else {
     showError({

@@ -1,11 +1,12 @@
 import 'jest-specific-snapshot';
 import path from 'path';
 import fs from 'fs';
+// @ts-expect-error (seems broken/missing)
 import requireFromString from 'require-from-string';
 import { transformFileSync, transformSync } from '@babel/core';
 
-import { inferControls } from '@storybook/store';
-import type { AnyFramework } from '@storybook/csf';
+import { inferControls } from '@storybook/preview-api';
+import type { Renderer } from '@storybook/types';
 import { normalizeNewlines } from '@storybook/docs-tools';
 
 import type { StoryContext } from '../types';
@@ -65,9 +66,9 @@ describe('react component properties', () => {
       const testFile = fs.readdirSync(testDir).find((fileName) => inputRegExp.test(fileName));
       if (testFile) {
         if (skippedTests.includes(testEntry.name)) {
-          it.skip(testEntry.name, () => {});
+          it.skip(`${testEntry.name}`, () => {});
         } else {
-          it(testEntry.name, () => {
+          it(`${testEntry.name}`, () => {
             const inputPath = path.join(testDir, testFile);
 
             // snapshot the output of babel-plugin-react-docgen
@@ -88,7 +89,7 @@ describe('react component properties', () => {
             const rows = inferControls({
               argTypes,
               parameters,
-            } as unknown as StoryContext<AnyFramework>);
+            } as unknown as StoryContext<Renderer>);
             expect(rows).toMatchSpecificSnapshot(path.join(testDir, 'argTypes.snapshot'));
           });
         }

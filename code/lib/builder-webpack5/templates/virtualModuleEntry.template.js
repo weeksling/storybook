@@ -9,7 +9,7 @@ import {
   addArgsEnhancer,
   addArgTypesEnhancer,
   setGlobalRender,
-} from '{{clientApi}}';
+} from '{{previewApi}}';
 import * as previewAnnotations from '{{previewAnnotationFilename}}';
 
 Object.keys(previewAnnotations).forEach((key) => {
@@ -47,7 +47,8 @@ Object.keys(previewAnnotations).forEach((key) => {
     }
     case '__namedExportsOrder':
     case 'decorateStory':
-    case 'renderToDOM': {
+    case 'renderToDOM': // deprecated
+    case 'renderToCanvas': {
       return null; // This key is not handled directly in v6 mode.
     }
     case 'runStep': {

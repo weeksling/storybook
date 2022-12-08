@@ -28,6 +28,8 @@ Let's get started with an example that combines Markdown with a single story:
     'vue/checkbox-story.mdx-3.mdx.mdx',
     'svelte/checkbox-story.mdx.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/mdx#snippet-checkbox-story"
 />
 
 <!-- prettier-ignore-end -->
@@ -52,6 +54,8 @@ For example, here's the first story from the Checkbox example above, rewritten i
   paths={[
     'common/checkbox-story-csf.js.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/mdx#snippet-checkbox-story-csf"
 />
 
 <!-- prettier-ignore-end -->
@@ -72,6 +76,8 @@ Let's look at a more realistic example to see how MDX works:
     'vue/badge-story.mdx-3.mdx.mdx',
     'svelte/badge-story.mdx.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/mdx#snippet-badge-story"
 />
 
 <!-- prettier-ignore-end -->

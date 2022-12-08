@@ -1,6 +1,6 @@
 {
   "name": "@storybook/html-webpack5",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Storybook for HTML: View HTML snippets in isolation with Hot Reloading.",
   "keywords": [
     "storybook"
@@ -50,20 +50,20 @@
     "prep": "../../../scripts/prepare/bundle.ts"
   },
   "dependencies": {
-    "@storybook/builder-webpack5": "7.0.0-alpha.40",
-    "@storybook/core-common": "7.0.0-alpha.40",
-    "@storybook/html": "7.0.0-alpha.40",
-    "@storybook/preset-html-webpack": "7.0.0-alpha.40",
+    "@storybook/builder-webpack5": "7.0.0-beta.0",
+    "@storybook/core-common": "7.0.0-beta.0",
+    "@storybook/html": "7.0.0-beta.0",
+    "@storybook/preset-html-webpack": "7.0.0-beta.0",
     "@types/node": "^16.0.0",
-    "global": "^4.4.0",
-    "react": "16.14.0",
-    "react-dom": "16.14.0"
+    "global": "^4.4.0"
   },
   "devDependencies": {
-    "typescript": "~4.6.3"
+    "typescript": "~4.9.3"
   },
   "peerDependencies": {
-    "@babel/core": "*"
+    "@babel/core": "*",
+    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
+    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
   },
   "engines": {
     "node": ">=10.13.0"
@@ -78,5 +78,5 @@
     ],
     "platform": "node"
   },
-  "gitHead": "8f6d8629f1ad7e776c39e2c7621f4a0d538aa93c"
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70"
 }

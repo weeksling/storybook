@@ -1,12 +1,7 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*"],
-  "exclude": [
-    "src/**/*.test.*",
-    "src/**/tests/**/*",
-    "src/**/__tests__/**/*",
-    "src/**/*.stories.*",
-    "src/**/*.mockdata.*",
-    "src/**/__testfixtures__/**"
-  ]
+  "compilerOptions": {
+    "types": ["testing-library__jest-dom"]
+  },
+  "include": ["src/**/*"]
 }

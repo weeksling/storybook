@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Provider as ManagerProvider } from '@storybook/api';
+import { Provider as ManagerProvider } from '@storybook/manager-api';
 import { LocationProvider } from '@storybook/router';
 import { HelmetProvider } from 'react-helmet-async';
 import { styled } from '@storybook/theming';
@@ -8,13 +8,12 @@ import App from './app';
 import { PrettyFakeProvider, FakeProvider } from './FakeProvider';
 
 export default {
-  title: 'UI/App',
   component: App,
   parameters: {
     layout: 'fullscreen',
   },
   decorators: [
-    (StoryFn) => (
+    (StoryFn: any) => (
       <HelmetProvider key="helmet.Provider">
         <LocationProvider>
           <ThemeStack>

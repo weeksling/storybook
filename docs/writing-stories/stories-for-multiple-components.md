@@ -12,13 +12,17 @@ It's useful to write stories that [render two or more components](../writing-sto
     'react/list-story-with-subcomponents.ts.mdx',
     'angular/list-story-with-subcomponents.ts.mdx',
     'vue/list-story-with-sub-components.2.js.mdx',
+    'vue/list-story-with-sub-components.ts-2.ts.mdx',
     'vue/list-story-with-sub-components.3.js.mdx',
+    'vue/list-story-with-sub-components.ts-3.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/stories-for-multiple-components#snippet-list-story-with-subcomponents"
 />
 
 <!-- prettier-ignore-end -->
 
-Note that by adding `subcomponents` to the default export, we get an extra pane on the ArgsTable, listing the props of `ListItem`:
+Note that by adding `subcomponents` to the default export, we get an extra panel on the ArgsTable, listing the props of `ListItem`:
 
 ![Storybook story with subcomponent argstable](./argstable-subcomponents.png)
 
@@ -40,11 +44,15 @@ The simplest change we can make to the above is to reuse the stories of the `Lis
     'react/list-story-unchecked.js.mdx',
     'react/list-story-unchecked.ts.mdx',
     'vue/list-story-unchecked.2.js.mdx',
+    'vue/list-story-unchecked.ts-2.ts.mdx',
     'vue/list-story-unchecked.3.js.mdx',
+    'vue/list-story-unchecked.ts-3.ts.mdx',
     'angular/list-story-unchecked.ts.mdx',
     'web-components/list-story-unchecked.js.mdx',
     'web-components/list-story-unchecked.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/stories-for-multiple-components#snippet-list-story-unchecked"
 />
 
 <!-- prettier-ignore-end -->
@@ -64,6 +72,8 @@ One way we improve that situation is by pulling the rendered subcomponent out in
     'react/list-story-with-unchecked-children.js.mdx',
     'react/list-story-with-unchecked-children.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/stories-for-multiple-components#snippet-list-story-with-unchecked-children"
 />
 
 <!-- prettier-ignore-end -->
@@ -96,18 +106,15 @@ Another option that is more “data”-based is to create a special “story-gen
     'react/list-story-template.js.mdx',
     'react/list-story-template.ts.mdx',
     'vue/list-story-template.2.js.mdx',
+    'vue/list-story-template.ts-2.ts.mdx',
     'vue/list-story-template.3.js.mdx',
+    'vue/list-story-template.ts-3.ts.mdx',
     'angular/list-story-template.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/stories-for-multiple-components#snippet-list-story-template"
 />
 
 <!-- prettier-ignore-end -->
 
-This approach is a little more complex to setup, but it means you can more easily reuse the `args` to each story in a composite component. It also means that you can alter the args to the component with the Controls addon:
-
-<video autoPlay muted playsInline loop>
-  <source
-    src="template-component-with-controls-optimized.mp4"
-    type="video/mp4"
-  />
-</video>
+This approach is a little more complex to setup, but it means you can more easily reuse the `args` to each story in a composite component. It also means that you can alter the args to the component with the Controls addon.

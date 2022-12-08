@@ -11,7 +11,7 @@ export const e2eTests: Task = {
   },
   async run({ codeDir, junitFilename, template }, { dryRun, debug }) {
     await exec(
-      'yarn playwright test --reporter=junit',
+      `yarn playwright test`,
       {
         env: {
           STORYBOOK_URL: `http://localhost:${PORT}`,

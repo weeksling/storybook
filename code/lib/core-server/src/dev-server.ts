@@ -1,101 +1,43 @@
-import express, { Router } from 'express';
+import express from 'express';
 import compression from 'compression';
 
-import {
-  CoreConfig,
-  DocsOptions,
-  Options,
-  StorybookConfig,
-  normalizeStories,
-  logConfig,
-} from '@storybook/core-common';
+import type { CoreConfig, Options, StorybookConfig } from '@storybook/types';
 
-import { telemetry } from '@storybook/telemetry';
+import { logConfig } from '@storybook/core-common';
+
 import { getMiddleware } from './utils/middleware';
 import { getServerAddresses } from './utils/server-address';
 import { getServer } from './utils/server-init';
 import { useStatics } from './utils/server-statics';
-import { useStoriesJson } from './utils/stories-json';
-import { useStorybookMetadata } from './utils/metadata';
 import { getServerChannel } from './utils/get-server-channel';
 
 import { openInBrowser } from './utils/open-in-browser';
-import { getBuilders } from './utils/get-builders';
-import { StoryIndexGenerator } from './utils/StoryIndexGenerator';
-
-// @ts-expect-error (Converted from ts-ignore)
-export const router: Router = new Router();
-
-export const DEBOUNCE = 100;
+import { getManagerBuilder, getPreviewBuilder } from './utils/get-builders';
+import type { StoryIndexGenerator } from './utils/StoryIndexGenerator';
+import { getStoryIndexGenerator } from './utils/getStoryIndexGenerator';
+import { doTelemetry } from './utils/doTelemetry';
+import { router } from './utils/router';
+import { getAccessControlMiddleware } from './utils/getAccessControlMiddleware';
 
 export async function storybookDevServer(options: Options) {
-  const startTime = process.hrtime();
   const app = express();
-  const server = await getServer(app, options);
+
+  const [server, features, core] = await Promise.all([
+    getServer(app, options),
+    options.presets.apply<StorybookConfig['features']>('features'),
+    options.presets.apply<CoreConfig>('core'),
+  ]);
+
   const serverChannel = getServerChannel(server);
 
-  const features = await options.presets.apply<StorybookConfig['features']>('features');
-  const core = await options.presets.apply<CoreConfig>('core');
   // try get index generator, if failed, send telemetry without storyCount, then rethrow the error
-  let initializedStoryIndexGenerator: Promise<StoryIndexGenerator> = Promise.resolve(undefined);
-  if (features?.buildStoriesJson || features?.storyStoreV7) {
-    try {
-      const workingDir = process.cwd();
-      const directories = {
-        configDir: options.configDir,
-        workingDir,
-      };
-      const normalizedStories = normalizeStories(
-        await options.presets.apply('stories'),
-        directories
-      );
-      const storyIndexers = await options.presets.apply('storyIndexers', []);
-      const docsOptions = await options.presets.apply<DocsOptions>('docs', {});
+  const initializedStoryIndexGenerator: Promise<StoryIndexGenerator> = getStoryIndexGenerator(
+    features,
+    options,
+    serverChannel
+  );
 
-      const generator = new StoryIndexGenerator(normalizedStories, {
-        ...directories,
-        storyIndexers,
-        docs: docsOptions,
-        workingDir,
-        storiesV2Compatibility: !features?.breakingChangesV7 && !features?.storyStoreV7,
-        storyStoreV7: features?.storyStoreV7,
-      });
-
-      initializedStoryIndexGenerator = generator.initialize().then(() => generator);
-
-      useStoriesJson({
-        router,
-        initializedStoryIndexGenerator,
-        normalizedStories,
-        serverChannel,
-        workingDir,
-      });
-    } catch (err) {
-      if (!core?.disableTelemetry) {
-        telemetry('start');
-      }
-      throw err;
-    }
-  }
-
-  if (!core?.disableTelemetry) {
-    initializedStoryIndexGenerator.then(async (generator) => {
-      const storyIndex = await generator?.getIndex();
-      const payload = storyIndex
-        ? {
-            storyIndex: {
-              storyCount: Object.keys(storyIndex.entries).length,
-              version: storyIndex.v,
-            },
-          }
-        : undefined;
-      telemetry('start', payload, { configDir: options.configDir });
-    });
-  }
-
-  if (!core?.disableProjectJson) {
-    useStorybookMetadata(router, options.configDir);
-  }
+  doTelemetry(core, initializedStoryIndexGenerator, options);
 
   app.use(compression({ level: 1 }));
 
@@ -103,72 +45,78 @@ export async function storybookDevServer(options: Options) {
     options.extendServer(server);
   }
 
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    // These headers are required to enable SharedArrayBuffer
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
-    next();
-  });
-
-  if (core?.crossOriginIsolated) {
-    app.use((req, res, next) => {
-      // These headers are required to enable SharedArrayBuffer
-      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
-      res.header('Cross-Origin-Opener-Policy', 'same-origin');
-      res.header('Cross-Origin-Embedder-Policy', 'require-corp');
-      next();
-    });
-  }
+  app.use(getAccessControlMiddleware(core?.crossOriginIsolated));
 
   // User's own static files
-  await useStatics(router, options);
+  const usingStatics = useStatics(router, options);
 
   getMiddleware(options.configDir)(router);
+
   app.use(router);
 
   const { port, host } = options;
   const proto = options.https ? 'https' : 'http';
   const { address, networkAddress } = getServerAddresses(port, host, proto);
 
-  await new Promise<void>((resolve, reject) => {
-    // FIXME: Following line doesn't match TypeScript signature at all 🤔
-    // @ts-expect-error (Converted from ts-ignore)
+  const listening = new Promise<void>((resolve, reject) => {
+    // @ts-expect-error (Following line doesn't match TypeScript signature at all 🤔)
     server.listen({ port, host }, (error: Error) => (error ? reject(error) : resolve()));
   });
 
-  const [previewBuilder, managerBuilder] = await getBuilders(options);
+  const builderName = typeof core?.builder === 'string' ? core.builder : core?.builder?.name;
+
+  const [previewBuilder, managerBuilder] = await Promise.all([
+    getPreviewBuilder(builderName, options.configDir),
+    getManagerBuilder(),
+  ]);
 
   if (options.debugWebpack) {
     logConfig('Preview webpack config', await previewBuilder.getConfig(options));
   }
 
   const managerResult = await managerBuilder.start({
-    startTime,
+    startTime: process.hrtime(),
     options,
     router,
     server,
+    channel: serverChannel,
   });
 
-  let previewResult;
+  let previewStarted: Promise<any> = Promise.resolve();
+
   if (!options.ignorePreview) {
-    try {
-      previewResult = await previewBuilder.start({
-        startTime,
+    previewStarted = previewBuilder
+      .start({
+        startTime: process.hrtime(),
         options,
         router,
         server,
+        channel: serverChannel,
+      })
+      .catch(async (e: any) => {
+        await managerBuilder?.bail().catch();
+        // For some reason, even when Webpack fails e.g. wrong main.js config,
+        // the preview may continue to print to stdout, which can affect output
+        // when we catch this error and process those errors (e.g. telemetry)
+        // gets overwritten by preview progress output. Therefore, we should bail the preview too.
+        await previewBuilder?.bail().catch();
+
+        // re-throw the error
+        throw e;
       });
-    } catch (error) {
-      await managerBuilder?.bail();
-      throw error;
+  }
+
+  // this is a preview route, the builder has to be started before we can serve it
+  // this handler keeps request to that route pending until the builder is ready to serve it, preventing a 404
+  router.get('/iframe.html', (req, res, next) => {
+    previewStarted.then(() => next());
+  });
+
+  Promise.all([initializedStoryIndexGenerator, listening, usingStatics]).then(async () => {
+    if (!options.ci && !options.smokeTest && options.open) {
+      openInBrowser(host ? networkAddress : address);
     }
-  }
+  });
 
-  // TODO #13083 Move this to before starting the previewBuilder - when compiling the preview is so fast that it will be done before the browser is done opening
-  if (!options.ci && !options.smokeTest && options.open) {
-    openInBrowser(host ? networkAddress : address);
-  }
-
-  return { previewResult, managerResult, address, networkAddress };
+  return { previewResult: await previewStarted, managerResult, address, networkAddress };
 }

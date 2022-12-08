@@ -41,6 +41,8 @@ With MDX, the `Story` block is not only a way of rendering stories, but how you 
     'svelte/component-story-mdx-story-by-name.mdx.mdx',
     'common/component-story-mdx-reference-storyid.mdx.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/doc-block-story#snippet-component-story-mdx-story-by-name"
 />
 
 <!-- prettier-ignore-end -->

@@ -1,11 +1,13 @@
 /* eslint-disable no-underscore-dangle */
 /* global window */
 import { SNIPPET_RENDERED, SourceType } from '@storybook/docs-tools';
-import { addons, useEffect } from '@storybook/addons';
-import type { PartialStoryFn } from '@storybook/csf';
+import { addons, useEffect } from '@storybook/preview-api';
+import type { PartialStoryFn } from '@storybook/types';
 import { dedent } from 'ts-dedent';
-import { HtmlFramework, StoryContext } from '../types';
-import { StoryFn } from '../public-types';
+
+import type { HtmlRenderer, StoryContext } from '../types';
+
+import type { StoryFn } from '../public-types';
 
 function skipSourceRender(context: StoryContext) {
   const sourceParams = context?.parameters.docs?.source;
@@ -34,7 +36,7 @@ function applyTransformSource(source: string, context: StoryContext): string {
   return transformSource(source, context);
 }
 
-export function sourceDecorator(storyFn: PartialStoryFn<HtmlFramework>, context: StoryContext) {
+export function sourceDecorator(storyFn: PartialStoryFn<HtmlRenderer>, context: StoryContext) {
   const story = context?.parameters.docs?.source?.excludeDecorators
     ? (context.originalStoryFn as StoryFn)(context.args, context)
     : storyFn();

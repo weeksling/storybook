@@ -1,11 +1,12 @@
-import React, { Fragment, FC, useMemo, useEffect, useState } from 'react';
-import type { Combo } from '@storybook/api';
-import { Consumer } from '@storybook/api';
+import type { FC } from 'react';
+import React, { Fragment, useMemo, useEffect, useState } from 'react';
+import type { Combo } from '@storybook/manager-api';
+import { Consumer } from '@storybook/manager-api';
 import { Button, getStoryHref } from '@storybook/components';
 import { Global, styled } from '@storybook/theming';
 import type { CSSObject } from '@storybook/theming';
 import { IFrame } from './iframe';
-import { FramesRendererProps } from './utils/types';
+import type { FramesRendererProps } from './utils/types';
 import { stringifyQueryParams } from './utils/stringifyQueryParams';
 
 const getActive = (refId: FramesRendererProps['refId']) => {
@@ -57,12 +58,12 @@ export const FramesRenderer: FC<FramesRendererProps> = ({
   const active = getActive(refId);
 
   const styles = useMemo<CSSObject>(() => {
-    // add #storybook-root to make the selector high enough in specificity
+    // add #root to make the selector high enough in specificity
     return {
-      '#storybook-root [data-is-storybook="false"]': {
+      '#root [data-is-storybook="false"]': {
         display: 'none',
       },
-      '#storybook-root [data-is-storybook="true"]': {
+      '#root [data-is-storybook="true"]': {
         display: 'block',
       },
     };

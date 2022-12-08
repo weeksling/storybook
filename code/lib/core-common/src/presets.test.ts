@@ -1,3 +1,6 @@
+import path from 'path';
+import './presets';
+
 function wrapPreset(basePresets: any): { babel: Function; webpack: Function } {
   return {
     babel: async (config: any, args: any) => basePresets.apply('babel', config, args),
@@ -407,7 +410,7 @@ describe('resolveAddonName', () => {
   it('should resolve managerEntries', () => {
     expect(resolveAddonName({}, '@storybook/addon-actions/register')).toEqual({
       name: '@storybook/addon-actions/register',
-      managerEntries: ['@storybook/addon-actions/register'],
+      managerEntries: [path.normalize('@storybook/addon-actions/register')],
       type: 'virtual',
     });
   });
@@ -415,7 +418,7 @@ describe('resolveAddonName', () => {
   it('should resolve managerEntries from new /manager path', () => {
     expect(resolveAddonName({}, '@storybook/addon-actions/manager')).toEqual({
       name: '@storybook/addon-actions/manager',
-      managerEntries: ['@storybook/addon-actions/manager'],
+      managerEntries: [path.normalize('@storybook/addon-actions/manager')],
       type: 'virtual',
     });
   });
@@ -534,14 +537,14 @@ describe('loadPreset', () => {
         name: '@storybook/addon-actions/register',
         options: {},
         preset: {
-          managerEntries: ['@storybook/addon-actions/register'],
+          managerEntries: [path.normalize('@storybook/addon-actions/register')],
         },
       },
       {
         name: 'addon-foo/register.js',
         options: {},
         preset: {
-          managerEntries: ['addon-foo/register.js'],
+          managerEntries: [path.normalize('addon-foo/register')],
         },
       },
       {
@@ -563,14 +566,14 @@ describe('loadPreset', () => {
         name: 'addon-baz/register.js',
         options: {},
         preset: {
-          managerEntries: ['addon-baz/register.js'],
+          managerEntries: [path.normalize('addon-baz/register')],
         },
       },
       {
         name: '@storybook/addon-notes/register-panel',
         options: {},
         preset: {
-          managerEntries: ['@storybook/addon-notes/register-panel'],
+          managerEntries: [path.normalize('@storybook/addon-notes/register-panel')],
         },
       },
       {

@@ -1,19 +1,19 @@
 /* eslint-disable prefer-destructuring */
-import { start } from '@storybook/core-client';
-import type { ClientStoryApi, Loadable } from '@storybook/addons';
+import type { Addon_ClientStoryApi, Addon_Loadable } from '@storybook/types';
+import { start } from '@storybook/preview-api';
 
-import { renderToDOM } from './render';
-import type { PreactFramework } from './types';
+import { renderToCanvas } from './render';
+import type { PreactRenderer } from './types';
 
-export interface ClientApi extends ClientStoryApi<PreactFramework['storyResult']> {
-  configure(loader: Loadable, module: NodeModule): void;
+export interface ClientApi extends Addon_ClientStoryApi<PreactRenderer['storyResult']> {
+  configure(loader: Addon_Loadable, module: NodeModule): void;
   forceReRender(): void;
   raw: () => any; // todo add type
   load: (...args: any[]) => void;
 }
 
 const FRAMEWORK = 'preact';
-const api = start(renderToDOM);
+const api = start<PreactRenderer>(renderToCanvas);
 
 export const storiesOf: ClientApi['storiesOf'] = (kind, m) => {
   return (api.clientApi.storiesOf(kind, m) as ReturnType<ClientApi['storiesOf']>).addParameters({

@@ -1,13 +1,15 @@
 /* eslint-disable no-underscore-dangle */
-import React, { createElement, ReactElement } from 'react';
-import reactElementToJSXString, { Options } from 'react-element-to-jsx-string';
+import type { ReactElement } from 'react';
+import React, { createElement } from 'react';
+import type { Options } from 'react-element-to-jsx-string';
+import reactElementToJSXString from 'react-element-to-jsx-string';
 
-import { addons, useEffect } from '@storybook/addons';
-import { StoryContext, ArgsStoryFn, PartialStoryFn } from '@storybook/csf';
+import { addons, useEffect } from '@storybook/preview-api';
+import type { StoryContext, ArgsStoryFn, PartialStoryFn } from '@storybook/types';
 import { SourceType, SNIPPET_RENDERED, getDocgenSection } from '@storybook/docs-tools';
 import { logger } from '@storybook/client-logger';
 
-import { ReactFramework } from '../types';
+import type { ReactRenderer } from '../types';
 
 import { isMemo, isForwardRef } from './lib';
 
@@ -21,14 +23,14 @@ type JSXOptions = Options & {
   /** Override the display name used for a component */
   displayName?: string | Options['displayName'];
   /** A function ran after a story is rendered */
-  transformSource?(dom: string, context?: StoryContext<ReactFramework>): string;
+  transformSource?(dom: string, context?: StoryContext<ReactRenderer>): string;
 };
 
 /** Run the user supplied transformSource function if it exists */
 const applyTransformSource = (
   domString: string,
   options: JSXOptions,
-  context?: StoryContext<ReactFramework>
+  context?: StoryContext<ReactRenderer>
 ) => {
   if (typeof options.transformSource !== 'function') {
     return domString;
@@ -79,6 +81,7 @@ export const renderJsx = (code: React.ReactElement, options: JSXOptions) => {
           // To get exotic component names resolving properly
           displayName: (el: any): string =>
             el.type.displayName ||
+            (el.type === Symbol.for('react.profiler') ? 'Profiler' : null) ||
             getDocgenSection(el.type, 'displayName') ||
             (el.type.name !== '_default' ? el.type.name : null) ||
             (typeof el.type === 'function' ? 'No Display Name' : null) ||
@@ -119,7 +122,7 @@ export const renderJsx = (code: React.ReactElement, options: JSXOptions) => {
     return string;
   }).join('\n');
 
-  return result.replace(/function\s+noRefCheck\(\)\s+\{\}/, '() => {}');
+  return result.replace(/function\s+noRefCheck\(\)\s+\{\}/g, '() => {}');
 };
 
 const defaultOpts = {
@@ -129,7 +132,7 @@ const defaultOpts = {
   showDefaultProps: false,
 };
 
-export const skipJsxRender = (context: StoryContext<ReactFramework>) => {
+export const skipJsxRender = (context: StoryContext<ReactRenderer>) => {
   const sourceParams = context?.parameters.docs?.source;
   const isArgsStory = context?.parameters.__isArgsStory;
 
@@ -157,8 +160,8 @@ const mdxToJsx = (node: any) => {
 };
 
 export const jsxDecorator = (
-  storyFn: PartialStoryFn<ReactFramework>,
-  context: StoryContext<ReactFramework>
+  storyFn: PartialStoryFn<ReactRenderer>,
+  context: StoryContext<ReactRenderer>
 ) => {
   const channel = addons.getChannel();
   const skip = skipJsxRender(context);
@@ -185,7 +188,7 @@ export const jsxDecorator = (
 
   // Exclude decorators from source code snippet by default
   const storyJsx = context?.parameters.docs?.source?.excludeDecorators
-    ? (context.originalStoryFn as ArgsStoryFn<ReactFramework>)(context.args, context)
+    ? (context.originalStoryFn as ArgsStoryFn<ReactRenderer>)(context.args, context)
     : story;
 
   const sourceJsx = mdxToJsx(storyJsx);

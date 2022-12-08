@@ -1,18 +1,19 @@
 /* eslint-disable no-await-in-loop */
-import { AbortController } from 'node-abort-controller';
 import { getJunitXml } from 'junit-xml';
-import { outputFile, existsSync, readFile } from 'fs-extra';
+import { outputFile, readFile, pathExists } from 'fs-extra';
 import { join, resolve } from 'path';
 import { prompt } from 'prompts';
 import boxen from 'boxen';
 import { dedent } from 'ts-dedent';
 
-import { createOptions, getCommand, getOptionsOrPrompt, OptionValues } from './utils/options';
+import type { OptionValues } from './utils/options';
+import { createOptions, getCommand, getOptionsOrPrompt } from './utils/options';
 import { install } from './tasks/install';
 import { compile } from './tasks/compile';
 import { check } from './tasks/check';
 import { publish } from './tasks/publish';
 import { runRegistryTask } from './tasks/run-registry';
+import { generate } from './tasks/generate';
 import { sandbox } from './tasks/sandbox';
 import { dev } from './tasks/dev';
 import { smokeTest } from './tasks/smoke-test';
@@ -22,16 +23,18 @@ import { testRunner } from './tasks/test-runner';
 import { chromatic } from './tasks/chromatic';
 import { e2eTests } from './tasks/e2e-tests';
 
-import TEMPLATES from '../code/lib/cli/src/repro-templates';
+import {
+  allTemplates as TEMPLATES,
+  type TemplateKey,
+  type Template,
+} from '../code/lib/cli/src/repro-templates';
 
-const sandboxDir = resolve(__dirname, '../sandbox');
+const sandboxDir = process.env.SANDBOX_ROOT || resolve(__dirname, '../sandbox');
 const codeDir = resolve(__dirname, '../code');
-const junitDir = resolve(__dirname, '../code/test-results');
+const junitDir = resolve(__dirname, '../test-results');
 
 export const extraAddons = ['a11y', 'storysource'];
 
-export type TemplateKey = keyof typeof TEMPLATES;
-export type Template = typeof TEMPLATES[TemplateKey];
 export type Path = string;
 export type TemplateDetails = {
   key: TemplateKey;
@@ -60,7 +63,7 @@ export type Task = {
   /**
    * Which tasks must be ready before this task can run
    */
-  dependsOn?: TaskKey[] | ((options: PassedOptionValues) => TaskKey[]);
+  dependsOn?: TaskKey[] | ((details: TemplateDetails, options: PassedOptionValues) => TaskKey[]);
   /**
    * Is this task already "ready", and potentially not required?
    */
@@ -87,6 +90,7 @@ export const tasks = {
   publish,
   'run-registry': runRegistryTask,
   // These tasks pertain to a single sandbox in the ../sandboxes dir
+  generate,
   sandbox,
   dev,
   'smoke-test': smokeTest,
@@ -142,11 +146,6 @@ export const options = createOptions({
     inverse: true,
     promptType: false,
   },
-  fromLocalRepro: {
-    type: 'boolean',
-    description: 'Create the template from a local repro (rather than degitting it)?',
-    promptType: false,
-  },
   dryRun: {
     type: 'boolean',
     description: "Don't execute commands, just list them (dry run)?",
@@ -160,6 +159,11 @@ export const options = createOptions({
   junit: {
     type: 'boolean',
     description: 'Store results in junit format?',
+    promptType: false,
+  },
+  skipTemplateStories: {
+    type: 'boolean',
+    description: 'Do not include template stories and their addons',
     promptType: false,
   },
 });
@@ -176,11 +180,18 @@ async function writeJunitXml(
   taskKey: TaskKey,
   templateKey: TemplateKey,
   startTime: Date,
-  err?: Error
+  err?: Error,
+  systemError?: boolean
 ) {
+  let errorData = {};
+  if (err) {
+    // we want to distinguish whether the error comes from the tests we are running or from arbitrary code
+    errorData = systemError ? { errors: [{ message: err.stack }] } : { errors: [err] };
+  }
+
   const name = `${taskKey} - ${templateKey}`;
   const time = (Date.now() - +startTime) / 1000;
-  const testCase = { name, assertions: 1, time, ...(err && { errors: [err] }) };
+  const testCase = { name, assertions: 1, time, ...errorData };
   const suite = { name, timestamp: startTime, time, testCases: [testCase] };
   const junitXml = getJunitXml({ time, name, suites: [suite] });
   const path = getJunitFilename(taskKey);
@@ -197,7 +208,7 @@ function getTaskKey(task: Task): TaskKey {
  * Get a list of tasks that need to be (possibly) run, in order, to
  * be able to run `finalTask`.
  */
-function getTaskList(finalTask: Task, optionValues: PassedOptionValues) {
+function getTaskList(finalTask: Task, details: TemplateDetails, optionValues: PassedOptionValues) {
   const taskDeps = new Map<Task, Task[]>();
   // Which tasks depend on a given task
   const tasksThatDepend = new Map<Task, Task[]>();
@@ -213,7 +224,9 @@ function getTaskList(finalTask: Task, optionValues: PassedOptionValues) {
     tasksThatDepend.set(task, dependent ? [dependent] : []);
 
     const dependedTaskNames =
-      typeof task.dependsOn === 'function' ? task.dependsOn(optionValues) : task.dependsOn || [];
+      typeof task.dependsOn === 'function'
+        ? task.dependsOn(details, optionValues)
+        : task.dependsOn || [];
     const dependedTasks = dependedTaskNames.map((n) => tasks[n]);
     taskDeps.set(task, dependedTasks);
 
@@ -278,11 +291,15 @@ async function runTask(task: Task, details: TemplateDetails, optionValues: Passe
 
     return controller;
   } catch (err) {
-    if (junitFilename) await writeJunitXml(getTaskKey(task), details.key, startTime, err);
+    const hasJunitFile = await pathExists(junitFilename);
+    // If there's a non-test related error (junit report has not been reported already), we report the general failure in a junit report
+    if (junitFilename && !hasJunitFile) {
+      await writeJunitXml(getTaskKey(task), details.key, startTime, err, true);
+    }
 
     throw err;
   } finally {
-    if (existsSync(junitFilename)) {
+    if (await pathExists(junitFilename)) {
       const junitXml = await (await readFile(junitFilename)).toString();
       const prefixedXml = junitXml.replace(/classname="(.*)"/g, `classname="${details.key} $1"`);
       await outputFile(junitFilename, prefixedXml);
@@ -308,7 +325,7 @@ async function run() {
     junitFilename: junit && getJunitFilename(taskKey),
   };
 
-  const { sortedTasks, tasksThatDepend } = getTaskList(finalTask, optionValues);
+  const { sortedTasks, tasksThatDepend } = getTaskList(finalTask, details, optionValues);
   const sortedTasksReady = await Promise.all(
     sortedTasks.map((t) => t.ready(details, optionValues))
   );
@@ -454,11 +471,10 @@ async function run() {
         await new Promise(() => {});
       }
     }
-    controllers.forEach((controller) => {
-      controller.abort();
-    });
   }
-
+  controllers.forEach((controller) => {
+    controller.abort();
+  });
   return 0;
 }
 

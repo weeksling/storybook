@@ -1,9 +1,9 @@
 import global from 'global';
 import { dedent } from 'ts-dedent';
-import type { RenderContext } from '@storybook/store';
+import type { RenderContext } from '@storybook/types';
 // @ts-expect-error (Converted from ts-ignore)
 import Component from '@ember/component'; // eslint-disable-line import/no-unresolved
-import { OptionsArgs, EmberFramework } from './types';
+import type { OptionsArgs, EmberRenderer } from './types';
 
 const { window: globalWindow, document } = global;
 
@@ -20,7 +20,7 @@ let lastPromise = app.boot();
 let hasRendered = false;
 let isRendering = false;
 
-function render(options: OptionsArgs, el: Element) {
+function render(options: OptionsArgs, el: EmberRenderer['canvasElement']) {
   if (isRendering) return;
   isRendering = true;
 
@@ -60,9 +60,9 @@ function render(options: OptionsArgs, el: Element) {
     });
 }
 
-export function renderToDOM(
-  { storyFn, kind, name, showMain, showError }: RenderContext<EmberFramework>,
-  domElement: Element
+export function renderToCanvas(
+  { storyFn, kind, name, showMain, showError }: RenderContext<EmberRenderer>,
+  canvasElement: EmberRenderer['canvasElement']
 ) {
   const element = storyFn();
 
@@ -80,5 +80,5 @@ export function renderToDOM(
   }
 
   showMain();
-  render(element, domElement);
+  render(element, canvasElement);
 }

@@ -1,9 +1,10 @@
+/// <reference types="@types/jest" />;
+
 /* eslint-disable no-underscore-dangle */
 import { dedent } from 'ts-dedent';
 import yaml from 'js-yaml';
 import { loadCsf } from './CsfFile';
 
-// @ts-expect-error (Converted from ts-ignore)
 expect.addSnapshotSerializer({
   print: (val: any) => yaml.dump(val).trimEnd(),
   test: (val) => typeof val !== 'string',
@@ -220,6 +221,28 @@ describe('CsfFile', () => {
       `);
     });
 
+    it('typescript satisfies', () => {
+      expect(
+        parse(
+          dedent`
+          import type { Meta, StoryFn } from '@storybook/react';
+          type PropTypes = {};
+          export default { title: 'foo/bar/baz' } as Meta<PropTypes>;
+          export const A: StoryFn<PropTypes> = () => <>A</>;
+          export const B: StoryFn<PropTypes> = () => <>B</>;
+        `
+        )
+      ).toMatchInlineSnapshot(`
+        meta:
+          title: foo/bar/baz
+        stories:
+          - id: foo-bar-baz--a
+            name: A
+          - id: foo-bar-baz--b
+            name: B
+      `);
+    });
+
     it('typescript meta var', () => {
       expect(
         parse(
@@ -227,6 +250,29 @@ describe('CsfFile', () => {
           import type { Meta, StoryFn } from '@storybook/react';
           type PropTypes = {};
           const meta = { title: 'foo/bar/baz' } as Meta<PropTypes>;
+          export default meta;
+          export const A: StoryFn<PropTypes> = () => <>A</>;
+          export const B: StoryFn<PropTypes> = () => <>B</>;
+        `
+        )
+      ).toMatchInlineSnapshot(`
+        meta:
+          title: foo/bar/baz
+        stories:
+          - id: foo-bar-baz--a
+            name: A
+          - id: foo-bar-baz--b
+            name: B
+      `);
+    });
+
+    it('typescript satisfies meta var', () => {
+      expect(
+        parse(
+          dedent`
+          import type { Meta, StoryFn } from '@storybook/react';
+          type PropTypes = {};
+          const meta = { title: 'foo/bar/baz' } satisfies Meta<PropTypes>;
           export default meta;
           export const A: StoryFn<PropTypes> = () => <>A</>;
           export const B: StoryFn<PropTypes> = () => <>B</>;
@@ -688,6 +734,106 @@ describe('CsfFile', () => {
       `;
       const csf = loadCsf(input, { makeTitle }).parse();
       expect(csf.imports).toMatchInlineSnapshot();
+    });
+  });
+
+  describe('tags', () => {
+    it('csf2', () => {
+      expect(
+        parse(
+          dedent`
+          export default { title: 'foo/bar', tags: ['X'] };
+          export const A = () => {};
+          A.tags = ['Y'];
+        `
+        )
+      ).toMatchInlineSnapshot(`
+        meta:
+          title: foo/bar
+          tags:
+            - X
+        stories:
+          - id: foo-bar--a
+            name: A
+            tags:
+              - 'Y'
+      `);
+    });
+
+    it('csf3', () => {
+      expect(
+        parse(
+          dedent`
+          export default { title: 'foo/bar', tags: ['X'] };
+          export const A = {
+            render: () => {},
+            tags: ['Y'],
+          };
+        `
+        )
+      ).toMatchInlineSnapshot(`
+        meta:
+          title: foo/bar
+          tags:
+            - X
+        stories:
+          - id: foo-bar--a
+            name: A
+            tags:
+              - 'Y'
+      `);
+    });
+
+    it('variables', () => {
+      expect(
+        parse(
+          dedent`
+          const x = ['X'];
+          const y = ['Y'];
+          export default { title: 'foo/bar', tags: x };
+          export const A = {
+            render: () => {},
+            tags: y,
+          };
+        `
+        )
+      ).toMatchInlineSnapshot(`
+        meta:
+          title: foo/bar
+          tags:
+            - X
+        stories:
+          - id: foo-bar--a
+            name: A
+            tags:
+              - 'Y'
+      `);
+    });
+
+    it('array error', () => {
+      expect(() =>
+        parse(
+          dedent`
+            export default { title: 'foo/bar', tags: 'X' };
+            export const A = {
+              render: () => {},
+            };
+          `
+        )
+      ).toThrow('CSF: Expected tags array');
+    });
+
+    it('array element handling', () => {
+      expect(() =>
+        parse(
+          dedent`
+            export default { title: 'foo/bar', tags: [10] };
+            export const A = {
+              render: () => {},
+            };
+          `
+        )
+      ).toThrow('CSF: Expected tag to be string literal');
     });
   });
 });

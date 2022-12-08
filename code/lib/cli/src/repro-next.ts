@@ -3,10 +3,10 @@ import path from 'path';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { dedent } from 'ts-dedent';
-import degit from 'degit';
+import { downloadTemplate } from 'giget';
 
 import { existsSync } from 'fs-extra';
-import TEMPLATES from './repro-templates';
+import { allTemplates as TEMPLATES } from './repro-templates';
 
 const logger = console;
 
@@ -137,19 +137,20 @@ export const reproNext = async ({
     try {
       const templateType = init ? 'after-storybook' : 'before-storybook';
       // Download the repro based on subfolder "after-storybook" and selected branch
-      await degit(
-        `storybookjs/repro-templates-temp/${selectedTemplate}/${templateType}#${branch}`,
+      await downloadTemplate(
+        `github:storybookjs/repro-templates-temp/${selectedTemplate}/${templateType}#${branch}`,
         {
           force: true,
+          dir: templateDestination,
         }
-      ).clone(templateDestination);
+      );
     } catch (err) {
       logger.error(`🚨 Failed to download repro template: ${err.message}`);
       throw err;
     }
 
     const initMessage = init
-      ? chalk.yellow(`yarn storybook`)
+      ? chalk.yellow(`yarn install\nyarn storybook`)
       : `Recreate your setup, then ${chalk.yellow(`run npx storybook init`)}`;
 
     logger.info(

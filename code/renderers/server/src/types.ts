@@ -1,14 +1,18 @@
-import type { StoryContext as StoryContextBase } from '@storybook/csf';
+import type { StoryContext as StoryContextBase, WebRenderer } from '@storybook/types';
 
-export type { RenderContext } from '@storybook/core-client';
+export type { RenderContext } from '@storybook/types';
 
 export type StoryFnServerReturnType = any;
-export type StoryContext = StoryContextBase<ServerFramework>;
+export type StoryContext = StoryContextBase<ServerRenderer>;
 
-export type ServerFramework = {
+/**
+ * @deprecated Use `ServerRenderer` instead.
+ */
+export type ServerFramework = ServerRenderer;
+export interface ServerRenderer extends WebRenderer {
   component: string;
   storyResult: StoryFnServerReturnType;
-};
+}
 
 export type FetchStoryHtmlType = (
   url: string,

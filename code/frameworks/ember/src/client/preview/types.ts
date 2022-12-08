@@ -1,4 +1,6 @@
-export type { RenderContext } from '@storybook/core-client';
+import type { WebRenderer } from '@storybook/types';
+
+export type { RenderContext } from '@storybook/types';
 
 export interface ShowErrorArgs {
   title: string;
@@ -11,7 +13,11 @@ export interface OptionsArgs {
   element: any;
 }
 
-export type EmberFramework = {
+/**
+ * @deprecated Use `EmberRenderer` instead.
+ */
+export type EmberFramework = EmberRenderer;
+export interface EmberRenderer extends WebRenderer {
   component: any;
   storyResult: OptionsArgs;
-};
+}

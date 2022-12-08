@@ -1,8 +1,7 @@
-import type { StoryContext as StoryContextBase } from '@storybook/csf';
+import type { StoryContext as StoryContextBase, WebRenderer } from '@storybook/types';
+import type { ComponentConstructorOptions, ComponentEvents, SvelteComponentTyped } from 'svelte';
 
-export type { RenderContext } from '@storybook/core-client';
-
-export type StoryContext = StoryContextBase<SvelteFramework>;
+export type StoryContext = StoryContextBase<SvelteRenderer>;
 
 export interface ShowErrorArgs {
   title: string;
@@ -23,12 +22,31 @@ interface MountProps {
   text: string;
 }
 
-interface WrapperData {
-  innerStyle: string;
-  style: string;
+type ComponentType<
+  Props extends Record<string, any> = any,
+  Events extends Record<string, any> = any
+> = new (options: ComponentConstructorOptions<Props>) => {
+  [P in keyof SvelteComponentTyped<Props> as P extends `$$${string}`
+    ? never
+    : P]: SvelteComponentTyped<Props, Events>[P];
+};
+
+export interface SvelteRenderer<C extends SvelteComponentTyped = SvelteComponentTyped>
+  extends WebRenderer {
+  component: ComponentType<this['T'] extends Record<string, any> ? this['T'] : any>;
+  storyResult: this['T'] extends Record<string, any>
+    ? SvelteStoryResult<this['T'], ComponentEvents<C>>
+    : SvelteStoryResult;
 }
 
-export type SvelteFramework = {
-  component: any;
-  storyResult: any;
-};
+export interface SvelteStoryResult<
+  Props extends Record<string, any> = any,
+  Events extends Record<string, any> = any
+> {
+  Component?: ComponentType<Props>;
+  on?: Record<string, any> extends Events
+    ? Record<string, (event: CustomEvent) => void>
+    : { [K in keyof Events as string extends K ? never : K]?: (event: Events[K]) => void };
+  props?: Props;
+  decorator?: ComponentType<Props>;
+}

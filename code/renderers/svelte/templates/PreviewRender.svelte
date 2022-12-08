@@ -8,37 +8,34 @@
   export let showError;
   export let storyContext;
 
-  const {
+  let {
     /** @type {SvelteComponent} */
     Component,
     /** @type {any} */
     props = {},
     /** @type {{[string]: () => {}}} Attach svelte event handlers */
     on,
-    Wrapper,
-    WrapperData = {},
-  } = storyFn(); 
+  } = storyFn();
 
-   const eventsFromArgTypes = Object.fromEntries(Object.entries(storyContext.argTypes)
+  // reactive, re-render on storyFn change
+  $: ({ Component, props = {}, on } = storyFn());
+
+  const eventsFromArgTypes = Object.fromEntries(
+    Object.entries(storyContext.argTypes)
       .filter(([k, v]) => v.action && props[k] != null)
-      .map(([k, v]) => [v.action, props[k]]));
-    
-  const events = {...eventsFromArgTypes, ...on};
+      .map(([k, v]) => [v.action, props[k]])
+  );
 
   if (!Component) {
     showError({
       title: `Expecting a Svelte component from the story: "${name}" of "${kind}".`,
       description: dedent`
         Did you forget to return the Svelte component configuration from the story?
-        Use "() => ({ Component: YourComponent, data: {} })"
+        Use "() => ({ Component: YourComponent, props: {} })"
         when defining the story.
       `,
     });
   }
 </script>
-<SlotDecorator
-  decorator={Wrapper}
-  decoratorProps={WrapperData}
-  component={Component}
-  props={props}
-  on={events}/>
+
+<SlotDecorator {Component} {props} on={{ ...eventsFromArgTypes, ...on }} />

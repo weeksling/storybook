@@ -1,7 +1,8 @@
-import type {
+import {
   Parameters as DefaultParameters,
   StoryContext as DefaultStoryContext,
-} from '@storybook/csf';
+  WebRenderer,
+} from '@storybook/types';
 
 export interface NgModuleMetadata {
   declarations?: any[];
@@ -26,10 +27,14 @@ export interface StoryFnAngularReturnType {
   userDefinedTemplate?: boolean;
 }
 
-export type AngularFramework = {
+/**
+ * @deprecated Use `AngularRenderer` instead.
+ */
+export type AngularFramework = AngularRenderer;
+export interface AngularRenderer extends WebRenderer {
   component: any;
   storyResult: StoryFnAngularReturnType;
-};
+}
 
 export type Parameters = DefaultParameters & {
   /** Uses legacy angular rendering engine that use dynamic component */
@@ -37,4 +42,4 @@ export type Parameters = DefaultParameters & {
   bootstrapModuleOptions?: unknown;
 };
 
-export type StoryContext = DefaultStoryContext<AngularFramework> & { parameters: Parameters };
+export type StoryContext = DefaultStoryContext<AngularRenderer> & { parameters: Parameters };

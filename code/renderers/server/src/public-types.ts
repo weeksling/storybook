@@ -1,37 +1,50 @@
 import type {
+  AnnotatedStoryFn,
   Args,
   ComponentAnnotations,
   StoryAnnotations,
-  AnnotatedStoryFn,
-} from '@storybook/csf';
-import { ServerFramework } from './types';
+  StoryContext as GenericStoryContext,
+  DecoratorFunction,
+  LoaderFunction,
+  StrictArgs,
+} from '@storybook/types';
+import type { ServerRenderer } from './types';
 
-export type { Args, ArgTypes, Parameters, StoryContext } from '@storybook/csf';
+export type { Args, ArgTypes, Parameters, StrictArgs } from '@storybook/types';
 
 /**
  * Metadata to configure the stories for a component.
  *
  * @see [Default export](https://storybook.js.org/docs/formats/component-story-format/#default-export)
  */
-export type Meta<TArgs = Args> = ComponentAnnotations<ServerFramework, TArgs>;
+export type Meta<TArgs = Args> = ComponentAnnotations<ServerRenderer, TArgs>;
 
 /**
  * Story function that represents a CSFv2 component example.
  *
  * @see [Named Story exports](https://storybook.js.org/docs/formats/component-story-format/#named-story-exports)
  */
-export type StoryFn<TArgs = Args> = AnnotatedStoryFn<ServerFramework, TArgs>;
+export type StoryFn<TArgs = Args> = AnnotatedStoryFn<ServerRenderer, TArgs>;
 
 /**
  * Story function that represents a CSFv3 component example.
  *
  * @see [Named Story exports](https://storybook.js.org/docs/formats/component-story-format/#named-story-exports)
  */
-export type StoryObj<TArgs = Args> = StoryAnnotations<ServerFramework, TArgs>;
+export type StoryObj<TArgs = Args> = StoryAnnotations<ServerRenderer, TArgs>;
 
 /**
- * Story function that represents a CSFv3 component example.
+ * @deprecated Use `StoryFn` instead.
+ * Use `StoryObj` if you want to migrate to CSF3, which uses objects instead of functions to represent stories.
+ * You can read more about the CSF3 format here: https://storybook.js.org/blog/component-story-format-3-0/
+ *
+ * Story function that represents a CSFv2 component example.
  *
  * @see [Named Story exports](https://storybook.js.org/docs/formats/component-story-format/#named-story-exports)
  */
-export type Story<TArgs = Args> = StoryObj<TArgs>;
+export type Story<TArgs = Args> = StoryFn<TArgs>;
+
+export type { ServerRenderer };
+export type Decorator<TArgs = StrictArgs> = DecoratorFunction<ServerRenderer, TArgs>;
+export type Loader<TArgs = StrictArgs> = LoaderFunction<ServerRenderer, TArgs>;
+export type StoryContext<TArgs = StrictArgs> = GenericStoryContext<ServerRenderer, TArgs>;

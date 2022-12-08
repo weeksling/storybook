@@ -45,6 +45,8 @@ If you want, you can also group multiple stories and render them inside a single
     'vue/mdx-canvas-multiple-stories.mdx-3.mdx.mdx',
     'svelte/mdx-canvas-multiple-stories.mdx.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/doc-block-canvas#snippet-mdx-canvas-multiple-stories"
 />
 
 <!-- prettier-ignore-end -->

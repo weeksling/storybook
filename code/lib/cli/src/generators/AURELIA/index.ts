@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { writeFileAsJson, readFileAsJson, copyTemplate } from '../../helpers';
-import { getBaseDir } from '../../dirs';
+import { getCliDir } from '../../dirs';
 import { baseGenerator } from '../baseGenerator';
-import { Generator } from '../types';
+import type { Generator } from '../types';
 
 function addStorybookExcludeGlobToTsConfig() {
   const tsConfigJson = readFileAsJson('tsconfig.json', true);
@@ -25,7 +25,7 @@ const generator: Generator = async (packageManager, npmOptions, options) => {
   await baseGenerator(packageManager, npmOptions, options, 'aurelia', {
     extraPackages: ['aurelia'],
   });
-  const templateDir = join(getBaseDir(), 'templates', 'aurelia');
+  const templateDir = join(getCliDir(), 'templates', 'aurelia');
   copyTemplate(templateDir);
 };
 

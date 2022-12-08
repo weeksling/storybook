@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import dedent from 'ts-dedent';
 import { getStorybookInfo } from '@storybook/core-common';
 import { readFile } from 'fs-extra';
-import { Fix } from '../types';
+import type { Fix } from '../types';
 
 export enum RemovedAPIs {
   addDecorator = 'addDecorator',
@@ -49,7 +49,8 @@ export const removedGlobalClientAPIs: Fix<GlobalClientAPIOptions> = {
   prompt({ usedAPIs, previewPath }) {
     return dedent`
       The following APIs (used in "${chalk.yellow(previewPath)}") have been removed from Storybook:
-      ${usedAPIs.map(chalk.cyan).join(', ')}
+      
+      ${usedAPIs.map((api) => `- ${chalk.cyan(api)}`).join('\n')}
 
       You'll need to update "${chalk.yellow(previewPath)}" manually.
 

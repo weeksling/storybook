@@ -1,4 +1,5 @@
-import React, { FC } from 'react';
+import type { FC } from 'react';
+import React from 'react';
 
 interface Props {
   any?: any;
@@ -16,5 +17,5 @@ export const Component: FC<Props> = ({
   ...rest
 }: Props) => {
   const props = { any, string, bool, number, ...rest };
-  return <>JSON.stringify(props)</>;
+  return <>{JSON.stringify(props)}</>;
 };

@@ -1,23 +1,22 @@
-import type { RenderContext } from '@storybook/store';
-import type { ArgsStoryFn } from '@storybook/csf';
+import { RenderContext, ArgsStoryFn } from '@storybook/types';
 
 import { renderNgApp } from './angular/helpers';
-import type { AngularFramework } from './types';
+import { AngularRenderer } from './types';
 
 import { RendererFactory } from './angular-beta/RendererFactory';
 
 export const rendererFactory = new RendererFactory();
 
-export const render: ArgsStoryFn<AngularFramework> = (props) => ({ props });
+export const render: ArgsStoryFn<AngularRenderer> = (props) => ({ props });
 
-export async function renderToDOM(
+export async function renderToCanvas(
   {
     storyFn,
     showMain,
     forceRemount,
     storyContext: { parameters, component },
     id,
-  }: RenderContext<AngularFramework>,
+  }: RenderContext<AngularRenderer>,
   element: HTMLElement
 ) {
   showMain();

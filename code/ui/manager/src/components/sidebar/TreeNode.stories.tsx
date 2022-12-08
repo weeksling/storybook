@@ -4,8 +4,8 @@ import { HighlightStyles } from './HighlightStyles';
 import { ComponentNode, DocumentNode, GroupNode, StoryNode } from './TreeNode';
 
 export default {
-  title: 'UI/Sidebar/TreeNode',
-  parameters: { layout: 'fullscreen' },
+  title: 'Sidebar/TreeNode',
+  parameters: { layout: 'fullscreen', withSymbols: true },
   component: StoryNode,
 };
 
@@ -14,7 +14,7 @@ export const Types = () => (
     <ComponentNode>Component</ComponentNode>
     <GroupNode>Group</GroupNode>
     <StoryNode>Story</StoryNode>
-    <DocumentNode>Document</DocumentNode>
+    <DocumentNode docsMode={false}>Document</DocumentNode>
   </>
 );
 
@@ -33,7 +33,9 @@ export const Expandable = () => (
 
 export const Nested = () => (
   <>
-    <DocumentNode depth={0}>Zero</DocumentNode>
+    <DocumentNode docsMode={false} depth={0}>
+      Zero
+    </DocumentNode>
     <GroupNode isExpandable isExpanded depth={0}>
       Zero
     </GroupNode>

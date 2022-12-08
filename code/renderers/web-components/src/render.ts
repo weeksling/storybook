@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-param-reassign */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import global from 'global';
 
 import { dedent } from 'ts-dedent';
@@ -7,14 +8,13 @@ import { render as litRender } from 'lit-html';
 // Keep `.js` extension to avoid issue with Webpack (related to export map?)
 // eslint-disable-next-line import/extensions
 import { isTemplateResult } from 'lit-html/directive-helpers.js';
-import { simulatePageLoad, simulateDOMContentLoaded } from '@storybook/preview-web';
-import type { RenderContext } from '@storybook/store';
-import { ArgsStoryFn } from '@storybook/csf';
-import { WebComponentsFramework } from './types';
+import { simulatePageLoad, simulateDOMContentLoaded } from '@storybook/preview-api';
+import type { RenderContext, ArgsStoryFn } from '@storybook/types';
+import type { WebComponentsRenderer } from './types';
 
 const { Node } = global;
 
-export const render: ArgsStoryFn<WebComponentsFramework> = (args, context) => {
+export const render: ArgsStoryFn<WebComponentsRenderer> = (args, context) => {
   const { id, component } = context;
   if (!component) {
     throw new Error(
@@ -30,35 +30,35 @@ export const render: ArgsStoryFn<WebComponentsFramework> = (args, context) => {
   return element;
 };
 
-export function renderToDOM(
-  { storyFn, kind, name, showMain, showError, forceRemount }: RenderContext<WebComponentsFramework>,
-  domElement: Element
+export function renderToCanvas(
+  { storyFn, kind, name, showMain, showError, forceRemount }: RenderContext<WebComponentsRenderer>,
+  canvasElement: WebComponentsRenderer['canvasElement']
 ) {
   const element = storyFn();
 
   showMain();
   if (isTemplateResult(element)) {
     // `render` stores the TemplateInstance in the Node and tries to update based on that.
-    // Since we reuse `domElement` for all stories, remove the stored instance first.
+    // Since we reuse `canvasElement` for all stories, remove the stored instance first.
     // But forceRemount means that it's the same story, so we want too keep the state in that case.
-    if (forceRemount || !domElement.querySelector('[id="root-inner"]')) {
-      domElement.innerHTML = '<div id="root-inner"></div>';
+    if (forceRemount || !canvasElement.querySelector('[id="root-inner"]')) {
+      canvasElement.innerHTML = '<div id="root-inner"></div>';
     }
-    const renderTo = domElement.querySelector<HTMLElement>('[id="root-inner"]');
+    const renderTo = canvasElement.querySelector<HTMLElement>('[id="root-inner"]');
 
     litRender(element, renderTo);
-    simulatePageLoad(domElement);
+    simulatePageLoad(canvasElement);
   } else if (typeof element === 'string') {
-    domElement.innerHTML = element;
-    simulatePageLoad(domElement);
+    canvasElement.innerHTML = element;
+    simulatePageLoad(canvasElement);
   } else if (element instanceof Node) {
     // Don't re-mount the element if it didn't change and neither did the story
-    if (domElement.firstChild === element && !forceRemount) {
+    if (canvasElement.firstChild === element && !forceRemount) {
       return;
     }
 
-    domElement.innerHTML = '';
-    domElement.appendChild(element);
+    canvasElement.innerHTML = '';
+    canvasElement.appendChild(element);
     simulateDOMContentLoaded();
   } else {
     showError({

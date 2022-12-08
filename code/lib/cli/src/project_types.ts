@@ -1,4 +1,4 @@
-import { validRange, minVersion } from 'semver';
+import { minVersion, validRange } from 'semver';
 
 function ltMajor(versionRange: string, major: number) {
   // Uses validRange to avoid a throw from minVersion if an invalid range gets passed
@@ -16,7 +16,7 @@ function eqMajor(versionRange: string, major: number) {
 }
 
 // Should match @storybook/<framework>
-export type SupportedFrameworks = 'nextjs' | 'angular';
+export type SupportedFrameworks = 'nextjs' | 'angular' | 'sveltekit';
 
 // Should match @storybook/<renderer>
 export type SupportedRenderers =
@@ -78,6 +78,7 @@ export enum ProjectType {
   RIOT = 'RIOT',
   PREACT = 'PREACT',
   SVELTE = 'SVELTE',
+  SVELTEKIT = 'SVELTEKIT',
   RAX = 'RAX',
   AURELIA = 'AURELIA',
   SERVER = 'SERVER',
@@ -93,6 +94,7 @@ export type Builder = CoreBuilder | (string & {});
 
 export enum SupportedLanguage {
   JAVASCRIPT = 'javascript',
+  TYPESCRIPT_LEGACY = 'typescript-legacy',
   TYPESCRIPT = 'typescript',
 }
 
@@ -254,6 +256,14 @@ export const supportedTemplates: TemplateConfiguration[] = [
     },
   },
   {
+    // TODO: This only works because it is before the SVELTE template. could be more explicit
+    preset: ProjectType.SVELTEKIT,
+    dependencies: ['@sveltejs/kit'],
+    matcherFunction: ({ dependencies }) => {
+      return dependencies.every(Boolean);
+    },
+  },
+  {
     preset: ProjectType.SVELTE,
     dependencies: ['svelte'],
     matcherFunction: ({ dependencies }) => {
@@ -277,7 +287,7 @@ export const supportedTemplates: TemplateConfiguration[] = [
 ];
 
 // A TemplateConfiguration that matches unsupported frameworks
-// AnyFramework matchers can be added to this object to give
+// Framework matchers can be added to this object to give
 // users an "Unsupported framework" message
 export const unsupportedTemplate: TemplateConfiguration = {
   preset: ProjectType.UNSUPPORTED,

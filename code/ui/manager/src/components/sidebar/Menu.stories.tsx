@@ -1,5 +1,6 @@
 import { expect } from '@storybook/jest';
-import React, { Fragment, FunctionComponent } from 'react';
+import type { FunctionComponent } from 'react';
+import React, { Fragment } from 'react';
 
 import { TooltipLinkList } from '@storybook/components';
 import { styled } from '@storybook/theming';
@@ -9,7 +10,7 @@ import { useMenu } from '../../containers/menu';
 
 export default {
   component: MenuItemIcon,
-  title: 'UI/Sidebar/Menu',
+  title: 'Sidebar/Menu',
   decorators: [
     (StoryFn: FunctionComponent) => (
       <Fragment>
@@ -62,6 +63,7 @@ export const Expanded = () => {
     </DoubleThemeRenderingHack>
   );
 };
+// @ts-expect-error (needs to be converted to CSF3)
 Expanded.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   const menuButton = await canvas.findByRole('button');
@@ -73,6 +75,7 @@ Expanded.play = async ({ canvasElement }) => {
 export const ExpandedWithoutReleaseNotes = () => {
   const menu = useMenu(
     {
+      // @ts-expect-error (invalid)
       getShortcutKeys: () => ({}),
       getAddonsShortcuts: () => ({}),
       versionUpdateAvailable: () => false,
@@ -91,6 +94,7 @@ export const ExpandedWithoutReleaseNotes = () => {
     </DoubleThemeRenderingHack>
   );
 };
+// @ts-expect-error (needs to be converted to CSF3)
 ExpandedWithoutReleaseNotes.play = async (context) => {
   const canvas = within(context.canvasElement);
   await Expanded.play(context);

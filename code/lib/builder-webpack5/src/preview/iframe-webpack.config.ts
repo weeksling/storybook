@@ -1,14 +1,17 @@
-import path from 'path';
+import { dirname, join, resolve } from 'path';
 import { DefinePlugin, HotModuleReplacementPlugin, ProgressPlugin, ProvidePlugin } from 'webpack';
 import type { Configuration } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+// @ts-expect-error (I removed this on purpose, because it's incorrect)
 import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
 import TerserWebpackPlugin from 'terser-webpack-plugin';
 import VirtualModulePlugin from 'webpack-virtual-modules';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 
-import type { Options, CoreConfig, DocsOptions } from '@storybook/core-common';
+import type { Options, CoreConfig, DocsOptions, PreviewAnnotation } from '@storybook/types';
+import { globals } from '@storybook/preview/globals';
 import {
+  getRendererName,
   stringifyProcessEnvs,
   handlebars,
   interpolate,
@@ -16,44 +19,36 @@ import {
   readTemplate,
   loadPreviewOrConfigFile,
   isPreservingSymlinks,
-  getFrameworkName,
 } from '@storybook/core-common';
 import { toRequireContextString, toImportFn } from '@storybook/core-webpack';
 import type { BuilderOptions, TypescriptOptions } from '../types';
 import { createBabelLoader } from './babel-loader-preview';
 
 const storybookPaths: Record<string, string> = {
-  global: path.dirname(require.resolve(`global/package.json`)),
+  global: dirname(require.resolve(`global/package.json`)),
   ...[
-    'addons',
+    // these packages are not pre-bundled because of react dependencies
     'api',
-    'store',
-    'channels',
-    'channel-postmessage',
-    'channel-websocket',
+    'manager-api',
     'components',
-    'core-events',
     'router',
     'theming',
-    'preview-web',
-    'client-api',
-    'client-logger',
   ].reduce(
     (acc, sbPackage) => ({
       ...acc,
-      [`@storybook/${sbPackage}`]: path.dirname(
-        require.resolve(`@storybook/${sbPackage}/package.json`)
-      ),
+      [`@storybook/${sbPackage}`]: dirname(require.resolve(`@storybook/${sbPackage}/package.json`)),
     }),
     {}
   ),
+  // deprecated, remove in 8.0
+  [`@storybook/api`]: dirname(require.resolve(`@storybook/manager-api/package.json`)),
 };
 
 export default async (
   options: Options & Record<string, any> & { typescriptOptions: TypescriptOptions }
 ): Promise<Configuration> => {
   const {
-    outputDir = path.join('.', 'public'),
+    outputDir = join('.', 'public'),
     quiet,
     packageJson,
     configType,
@@ -65,42 +60,67 @@ export default async (
     serverChannelUrl,
   } = options;
 
-  const frameworkName = await getFrameworkName(options);
-  const frameworkOptions = await presets.apply('frameworkOptions');
-
   const isProd = configType === 'PRODUCTION';
-  const envs = await presets.apply<Record<string, string>>('env');
-  const logLevel = await presets.apply('logLevel', undefined);
-
-  const headHtmlSnippet = await presets.apply('previewHead');
-  const bodyHtmlSnippet = await presets.apply('previewBody');
-  const template = await presets.apply<string>('previewMainTemplate');
-  const coreOptions = await presets.apply<CoreConfig>('core');
-  const builderOptions: BuilderOptions =
-    typeof coreOptions.builder === 'string'
-      ? {}
-      : coreOptions.builder?.options || ({} as BuilderOptions);
-  const docsOptions = await presets.apply<DocsOptions>('docs');
-
-  const previewAnnotations = [
-    ...(await presets.apply('previewAnnotations', [], options)),
-    loadPreviewOrConfigFile(options),
-  ].filter(Boolean);
-  const entries = (await presets.apply('entries', [], options)) as string[];
   const workingDir = process.cwd();
-  const stories = normalizeStories(await presets.apply('stories', [], options), {
+
+  const [
+    coreOptions,
+    frameworkOptions,
+    envs,
+    logLevel,
+    headHtmlSnippet,
+    bodyHtmlSnippet,
+    template,
+    docsOptions,
+    entries,
+    nonNormalizedStories,
+  ] = await Promise.all([
+    presets.apply<CoreConfig>('core'),
+    presets.apply('frameworkOptions'),
+    presets.apply<Record<string, string>>('env'),
+    presets.apply('logLevel', undefined),
+    presets.apply('previewHead'),
+    presets.apply('previewBody'),
+    presets.apply<string>('previewMainTemplate'),
+    presets.apply<DocsOptions>('docs'),
+    presets.apply<string[]>('entries', [], options),
+    presets.apply('stories', [], options),
+  ]);
+
+  const stories = normalizeStories(nonNormalizedStories, {
     configDir: options.configDir,
     workingDir,
   });
 
+  const builderOptions: BuilderOptions =
+    typeof coreOptions.builder === 'string'
+      ? {}
+      : coreOptions.builder?.options || ({} as BuilderOptions);
+
+  const previewAnnotations = [
+    ...(await presets.apply<PreviewAnnotation[]>('previewAnnotations', [], options)).map(
+      (entry) => {
+        // If entry is an object, use the absolute import specifier.
+        // This is to maintain back-compat with community addons that bundle other addons
+        // and package managers that "hide" sub dependencies (e.g. pnpm / yarn pnp)
+        // The vite builder uses the bare import specifier.
+        if (typeof entry === 'object') {
+          return entry.absolute;
+        }
+        return entry;
+      }
+    ),
+    loadPreviewOrConfigFile(options),
+  ].filter(Boolean);
+
   const virtualModuleMapping: Record<string, string> = {};
   if (features?.storyStoreV7) {
     const storiesFilename = 'storybook-stories.js';
-    const storiesPath = path.resolve(path.join(workingDir, storiesFilename));
+    const storiesPath = resolve(join(workingDir, storiesFilename));
 
     const needPipelinedImport = !!builderOptions.lazyCompilation && !isProd;
     virtualModuleMapping[storiesPath] = toImportFn(stories, { needPipelinedImport });
-    const configEntryPath = path.resolve(path.join(workingDir, 'storybook-config-entry.js'));
+    const configEntryPath = resolve(join(workingDir, 'storybook-config-entry.js'));
     virtualModuleMapping[configEntryPath] = handlebars(
       await readTemplate(
         require.resolve(
@@ -115,42 +135,45 @@ export default async (
     ).replace(/\\/g, '\\\\');
     entries.push(configEntryPath);
   } else {
-    const frameworkInitEntry = path.resolve(
-      path.join(workingDir, 'storybook-init-framework-entry.js')
-    );
-    virtualModuleMapping[frameworkInitEntry] = `import '${frameworkName}';`;
-    entries.push(frameworkInitEntry);
+    const rendererName = await getRendererName(options);
+
+    const rendererInitEntry = resolve(join(workingDir, 'storybook-init-renderer-entry.js'));
+    virtualModuleMapping[rendererInitEntry] = `import '${rendererName}';`;
+    entries.push(rendererInitEntry);
 
     const entryTemplate = await readTemplate(
-      path.join(__dirname, '..', '..', 'templates', 'virtualModuleEntry.template.js')
+      join(__dirname, '..', '..', 'templates', 'virtualModuleEntry.template.js')
     );
 
-    previewAnnotations.forEach((previewAnnotationFilename: any) => {
-      const clientApi = storybookPaths['@storybook/client-api'];
+    previewAnnotations.forEach((previewAnnotationFilename: string | undefined) => {
+      if (!previewAnnotationFilename) return;
+      const previewApi = storybookPaths['@storybook/preview-api'];
       const clientLogger = storybookPaths['@storybook/client-logger'];
 
+      // Ensure that relative paths end up mapped to a filename in the cwd, so a later import
+      // of the `previewAnnotationFilename` in the template works.
+      const entryFilename = previewAnnotationFilename.startsWith('.')
+        ? `${previewAnnotationFilename.replace(/(\w)(\/|\\)/g, '$1-')}-generated-config-entry.js`
+        : `${previewAnnotationFilename}-generated-config-entry.js`;
       // NOTE: although this file is also from the `dist/cjs` directory, it is actually a ESM
       // file, see https://github.com/storybookjs/storybook/pull/16727#issuecomment-986485173
-      virtualModuleMapping[`${previewAnnotationFilename}-generated-config-entry.js`] = interpolate(
-        entryTemplate,
-        {
-          previewAnnotationFilename,
-          clientApi,
-          clientLogger,
-        }
-      );
-      entries.push(`${previewAnnotationFilename}-generated-config-entry.js`);
+      virtualModuleMapping[entryFilename] = interpolate(entryTemplate, {
+        previewAnnotationFilename,
+        previewApi,
+        clientLogger,
+      });
+      entries.push(entryFilename);
     });
     if (stories.length > 0) {
       const storyTemplate = await readTemplate(
-        path.join(__dirname, '..', '..', 'templates', 'virtualModuleStory.template.js')
+        join(__dirname, '..', '..', 'templates', 'virtualModuleStory.template.js')
       );
       // NOTE: this file has a `.cjs` extension as it is a CJS file (from `dist/cjs`) and runs
       // in the user's webpack mode, which may be strict about the use of require/import.
       // See https://github.com/storybookjs/storybook/issues/14877
-      const storiesFilename = path.resolve(path.join(workingDir, `generated-stories-entry.cjs`));
+      const storiesFilename = resolve(join(workingDir, `generated-stories-entry.cjs`));
       virtualModuleMapping[storiesFilename] = interpolate(storyTemplate, {
-        frameworkName,
+        rendererName,
       })
         // Make sure we also replace quotes for this one
         .replace("'{{stories}}'", stories.map(toRequireContextString).join(','));
@@ -176,7 +199,7 @@ export default async (
     devtool: 'cheap-module-source-map',
     entry: entries,
     output: {
-      path: path.resolve(process.cwd(), outputDir),
+      path: resolve(process.cwd(), outputDir),
       filename: isProd ? '[name].[contenthash:8].iframe.bundle.js' : '[name].iframe.bundle.js',
       publicPath: '',
     },
@@ -187,6 +210,7 @@ export default async (
     watchOptions: {
       ignored: /node_modules/,
     },
+    externals: globals,
     ignoreWarnings: [
       {
         message: /export '\S+' was not found in 'global'/,

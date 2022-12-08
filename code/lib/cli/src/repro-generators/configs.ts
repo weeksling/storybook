@@ -1,5 +1,5 @@
-/* eslint-disable camelcase */
-import type { StorybookConfig } from '@storybook/core-common';
+/* eslint-disable @typescript-eslint/naming-convention */
+import type { StorybookConfig } from '@storybook/types';
 import type { SupportedRenderers } from '../project_types';
 
 export interface Parameters {
@@ -264,5 +264,13 @@ export const svelte: Parameters = {
   renderer: 'svelte',
   name: 'svelte',
   version: 'latest',
-  generator: 'npx degit sveltejs/template {{appName}}',
+  generator: 'npx giget github:sveltejs/template#master {{appName}}',
+};
+
+export const svelteKit: Parameters = {
+  renderer: 'svelte',
+  name: 'svelteKit',
+  version: 'latest',
+  generator:
+    'yarn create svelte-with-args --name={{appName}} --directory=. --template=skeleton --types=null --no-prettier --no-eslint --no-playwright',
 };

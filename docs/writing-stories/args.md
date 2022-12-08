@@ -22,20 +22,20 @@ To define the args of a single story, use the `args` CSF story key:
   paths={[
     'react/button-story-with-args.js.mdx',
     'react/button-story-with-args.ts.mdx',
-    'react/button-story-with-args.mdx.mdx',
     'vue/button-story-with-args.2.js.mdx',
-    'vue/button-story-with-args.mdx-2.mdx.mdx',
+    'vue/button-story-with-args.ts-2.ts.mdx',
     'vue/button-story-with-args.3.js.mdx',
-    'vue/button-story-with-args.mdx-3.mdx.mdx',
+    'vue/button-story-with-args.ts-3.ts.mdx',
     'angular/button-story-with-args.ts.mdx',
-    'angular/button-story-with-args.mdx.mdx',
     'svelte/button-story-with-args.js.mdx',
-    'svelte/button-story-with-args.mdx.mdx',
     'web-components/button-story-with-args.js.mdx',
     'html/button-story-with-args.ts.mdx',
     'html/button-story-with-args.js.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/args#snippet-button-story-with-args"
 />
+
 
 <!-- prettier-ignore-end -->
 
@@ -46,7 +46,10 @@ These args will only apply to the story for which they are attached, although yo
 <CodeSnippets
   paths={[
     'common/button-story-primary-long-name.js.mdx',
+    'common/button-story-primary-long-name.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/args#snippet-button-story-primary-long-name"
 />
 
 <!-- prettier-ignore-end -->
@@ -63,15 +66,15 @@ You can also define args at the component level; they will apply to all the comp
   paths={[
     'react/button-story-component-args-primary.js.mdx',
     'react/button-story-component-args-primary.ts.mdx',
-    'react/button-story-component-args-primary.mdx.mdx',
     'vue/button-story-component-args-primary.js.mdx',
-    'vue/button-story-component-args-primary.mdx.mdx',
+    'vue/button-story-component-args-primary.ts-2.ts.mdx',
+    'vue/button-story-component-args-primary.ts-3.ts.mdx',
     'angular/button-story-component-args-primary.ts.mdx',
-    'angular/button-story-component-args-primary.mdx.mdx',
     'svelte/button-story-component-args-primary.js.mdx',
-    'svelte/button-story-component-args-primary.mdx.mdx',
     'web-components/button-story-component-args-primary.js.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/args#snippet-button-story-component-args-primary"
 />
 
 <!-- prettier-ignore-end -->
@@ -99,7 +102,10 @@ You can separate the arguments to a story to compose in other stories. Here's ho
 <CodeSnippets
   paths={[
     'common/button-story-primary-composition.js.mdx',
+    'common/button-story-primary-composition.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/args#snippet-button-story-primary-composition"
 />
 
 <!-- prettier-ignore-end -->
@@ -120,9 +126,13 @@ Args are useful when writing stories for composite components that are assembled
     'react/page-story.ts.mdx',
     'angular/page-story.ts.mdx',
     'vue/page-story.2.js.mdx',
+    'vue/page-story.ts-2.ts.mdx',
     'vue/page-story.3.js.mdx',
+    'vue/page-story.ts-3.ts.mdx',
     'svelte/page-story.js.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/args#snippet-page-story"
 />
 
 <!-- prettier-ignore-end -->
@@ -137,14 +147,14 @@ You can use args in your stories to configure the component's appearance, simila
   paths={[
     'react/page-story-slots.js.mdx',
     'react/page-story-slots.ts.mdx',
-    'react/page-story-slots.mdx.mdx',
     'vue/page-story-slots.2.js.mdx',
-    'vue/page-story-slots.mdx-2.mdx.mdx',
+    'vue/page-story-slots.ts-2.ts.mdx',
     'vue/page-story-slots.3.js.mdx',
-    'vue/page-story-slots.mdx-3.mdx.mdx',
+    'vue/page-story-slots.ts-3.ts.mdx',
     'angular/page-story-slots.ts.mdx',
-    'angular/page-story-slots.mdx.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/args#snippet-page-story-slots"
 />
 
 <!-- prettier-ignore-end -->
@@ -184,6 +194,7 @@ Complex values such as JSX elements cannot be serialized to the manager (e.g., t
 <CodeSnippets
   paths={[
     'common/my-component-argtypes-with-mapping.js.mdx',
+    'common/my-component-argtypes-with-mapping.ts.mdx',
   ]}
 />
 
@@ -194,7 +205,7 @@ Note that `mapping` does not have to be exhaustive. If the arg value is not a pr
 <details>
 <summary>Using args in addons</summary>
 
-If you are [writing an addon](../addons/writing-addons.md) that wants to read or update args, use the `useArgs` hook exported by `@storybook/api`:
+If you are [writing an addon](../addons/writing-addons.md) that wants to read or update args, use the `useArgs` hook exported by `@storybook/manager-api`:
 
 <!-- prettier-ignore-start -->
 

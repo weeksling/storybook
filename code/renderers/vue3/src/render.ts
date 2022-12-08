@@ -1,11 +1,10 @@
 import { dedent } from 'ts-dedent';
 import { createApp, h } from 'vue';
-import type { RenderContext } from '@storybook/store';
-import type { ArgsStoryFn } from '@storybook/csf';
+import type { RenderContext, ArgsStoryFn } from '@storybook/types';
 
-import { StoryFnVueReturnType, VueFramework } from './types';
+import type { StoryFnVueReturnType, VueRenderer } from './types';
 
-export const render: ArgsStoryFn<VueFramework> = (props, context) => {
+export const render: ArgsStoryFn<VueRenderer> = (props, context) => {
   const { id, component: Component } = context;
   if (!Component) {
     throw new Error(
@@ -13,8 +12,7 @@ export const render: ArgsStoryFn<VueFramework> = (props, context) => {
     );
   }
 
-  // TODO remove this hack
-  return h(Component as Parameters<typeof h>[0], props);
+  return h(Component, props);
 };
 
 let setupFunction = (app: any) => {};
@@ -22,25 +20,25 @@ export const setup = (fn: (app: any) => void) => {
   setupFunction = fn;
 };
 
-const map = new Map<Element, ReturnType<typeof createApp>>();
+const map = new Map<VueRenderer['canvasElement'], ReturnType<typeof createApp>>();
 
-export function renderToDOM(
-  { title, name, storyFn, showMain, showError, showException }: RenderContext<VueFramework>,
-  domElement: Element
+export function renderToCanvas(
+  { title, name, storyFn, showMain, showError, showException }: RenderContext<VueRenderer>,
+  canvasElement: VueRenderer['canvasElement']
 ) {
   // TODO: explain cyclical nature of these app => story => mount
   let element: StoryFnVueReturnType;
   const storybookApp = createApp({
     unmounted() {
-      map.delete(domElement);
+      map.delete(canvasElement);
     },
     render() {
-      map.set(domElement, storybookApp);
+      map.set(canvasElement, storybookApp);
       setupFunction(storybookApp);
       return h(element);
     },
   });
-  storybookApp.config.errorHandler = showException;
+  storybookApp.config.errorHandler = (e: unknown) => showException(e as Error);
   element = storyFn();
 
   if (!element) {
@@ -56,9 +54,7 @@ export function renderToDOM(
 
   showMain();
 
-  if (map.has(domElement)) {
-    map.get(domElement).unmount();
-  }
+  map.get(canvasElement)?.unmount();
 
-  storybookApp.mount(domElement);
+  storybookApp.mount(canvasElement);
 }

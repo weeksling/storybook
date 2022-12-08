@@ -1,17 +1,18 @@
 import { readdir } from 'fs/promises';
 import { pathExists } from 'fs-extra';
 import { resolve } from 'path';
-import TEMPLATES from '../code/lib/cli/src/repro-templates';
+import {
+  allTemplates,
+  templatesByCadence,
+  type Cadence,
+  type Template as TTemplate,
+  type SkippableTask,
+} from '../code/lib/cli/src/repro-templates';
 
-const sandboxDir = resolve(__dirname, '../sandbox');
+const sandboxDir = process.env.SANDBOX_ROOT || resolve(__dirname, '../sandbox');
 
-export type Cadence = 'ci' | 'daily' | 'weekly';
-export type Template = {
-  cadence?: readonly Cadence[];
-  skipTasks?: string[];
-  // there are other fields but we don't use them here
-};
-export type TemplateKey = keyof typeof TEMPLATES;
+type Template = Pick<TTemplate, 'inDevelopment' | 'skipTasks'>;
+export type TemplateKey = keyof typeof allTemplates;
 export type Templates = Record<TemplateKey, Template>;
 
 async function getDirectories(source: string) {
@@ -30,7 +31,7 @@ export async function getTemplate(
     const sandboxes = await getDirectories(sandboxDir);
     potentialTemplateKeys = sandboxes
       .map((dirName) => {
-        return Object.keys(TEMPLATES).find(
+        return Object.keys(allTemplates).find(
           (templateKey) => templateKey.replace('/', '-') === dirName
         );
       })
@@ -38,16 +39,19 @@ export async function getTemplate(
   }
 
   if (potentialTemplateKeys.length === 0) {
-    const allTemplates = Object.entries(TEMPLATES as Templates);
-    const cadenceTemplates = allTemplates.filter(([, template]) =>
-      template.cadence.includes(cadence)
+    const cadenceTemplates = Object.entries(allTemplates).filter(([key]) =>
+      templatesByCadence[cadence].includes(key as TemplateKey)
     );
     potentialTemplateKeys = cadenceTemplates.map(([k]) => k) as TemplateKey[];
   }
 
-  potentialTemplateKeys = potentialTemplateKeys.filter(
-    (t) => !(TEMPLATES[t] as Template).skipTasks?.includes(scriptName)
-  );
+  potentialTemplateKeys = potentialTemplateKeys.filter((t) => {
+    const currentTemplate = allTemplates[t] as Template;
+    return (
+      currentTemplate.inDevelopment !== true &&
+      !currentTemplate.skipTasks?.includes(scriptName as SkippableTask)
+    );
+  });
 
   if (potentialTemplateKeys.length !== total) {
     throw new Error(`Circle parallelism set incorrectly.

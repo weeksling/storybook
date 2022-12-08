@@ -1,9 +1,10 @@
-import { start } from '@storybook/core-client';
+import { start } from '@storybook/preview-api';
 
 import './globals';
-import { renderToDOM } from './render';
+import type { EmberRenderer } from './types';
+import { renderToCanvas } from './render';
 
-const { configure: coreConfigure, clientApi, forceReRender } = start(renderToDOM);
+const { configure: coreConfigure, clientApi, forceReRender } = start<EmberRenderer>(renderToCanvas);
 
 export const { raw } = clientApi;
 

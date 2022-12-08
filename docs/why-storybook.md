@@ -41,23 +41,19 @@ You write stories for granular UI component variation and then use those stories
   paths={[
     'react/histogram-story.js.mdx',
     'react/histogram-story.ts.mdx',
-    'react/histogram-story.mdx.mdx',
     'angular/histogram-story.ts.mdx',
-    'angular/histogram-story.mdx.mdx',
     'vue/histogram-story.2.js.mdx',
     'vue/histogram-story.ts-2.ts.mdx',
-    'vue/histogram-story.mdx-2.mdx',
     'vue/histogram-story.3.js.mdx',
     'vue/histogram-story.ts-3.ts.mdx',
-    'vue/histogram-story.mdx-3.mdx',
     'svelte/histogram-story.js.mdx',
-    'svelte/histogram-story.mdx.mdx',
     'web-components/histogram-story.js.mdx',
     'preact/histogram-story.js.mdx',
-    'preact/histogram-story.mdx.mdx',
     'html/histogram-story.js.mdx',
     'html/histogram-story.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="why-storybook#snippet-histogram-story"
 />
 
 <!-- prettier-ignore-end -->
@@ -133,7 +129,7 @@ Storybook is compatible with your continuous integration workflow. Add it as a C
 
 Storybook is powered by [Component Story Format](https://github.com/ComponentDriven/csf), an open standard based on JavaScript ES6 modules. This enables stories to interoperate between development, testing, and design tools. Each story is exported as a JavaScript function enabling you to reuse it with other tools. No vendor lock-in.
 
-Reuse stories with [Jest](https://jestjs.io/) and [Testing Library](https://testing-library.com/) to verify interactions. Put them in [Chromatic](https://www.chromatic.com/) for visual testing. Audit story accessibility with [Axe](https://github.com/dequelabs/axe-core). Or test user flows with [Playwright](https://playwright.dev/) and [Cypress](https://www.cypress.io/). Reuse unlocks more workflows at no extra cost.
+Reuse stories with [Jest](https://jestjs.io/) and [Testing Library](https://testing-library.com/) to verify interactions. Put them in [Chromatic](https://www.chromatic.com/?utm_source=storybook_website&utm_medium=link&utm_campaign=storybook) for visual testing. Audit story accessibility with [Axe](https://github.com/dequelabs/axe-core). Or test user flows with [Playwright](https://playwright.dev/) and [Cypress](https://www.cypress.io/). Reuse unlocks more workflows at no extra cost.
 
 ---
 

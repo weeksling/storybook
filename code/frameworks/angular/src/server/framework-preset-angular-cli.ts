@@ -1,15 +1,15 @@
-/* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-shadow */
 import webpack from 'webpack';
 import { logger } from '@storybook/node-logger';
-import { targetFromTargetString, BuilderContext, Target } from '@angular-devkit/architect';
+import { BuilderContext, Target, targetFromTargetString } from '@angular-devkit/architect';
 import { sync as findUpSync } from 'find-up';
 import semver from 'semver';
 import { dedent } from 'ts-dedent';
 
-import { logging, JsonObject } from '@angular-devkit/core';
+import { JsonObject, logging } from '@angular-devkit/core';
+import { getWebpackConfig as getCustomWebpackConfig } from './angular-cli-webpack';
 import { moduleIsAvailable } from './utils/module-is-available';
-import { getWebpackConfig as getWebpackConfig13_x_x } from './angular-cli-webpack-13.x.x';
-import type { PresetOptions } from './preset-options';
+import { PresetOptions } from './preset-options';
 import {
   getDefaultProjectName,
   findAngularProjectTarget,
@@ -43,7 +43,7 @@ export async function webpackFinal(baseConfig: webpack.Configuration, options: P
         const builderOptions = await getBuilderOptions(_options, builderContext);
         const legacyDefaultOptions = await getLegacyDefaultBuildOptions(_options);
 
-        return getWebpackConfig13_x_x(_baseConfig, {
+        return getCustomWebpackConfig(_baseConfig, {
           builderOptions: {
             watch: options.configType === 'DEVELOPMENT',
             ...legacyDefaultOptions,

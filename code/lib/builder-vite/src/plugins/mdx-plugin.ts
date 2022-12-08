@@ -1,23 +1,14 @@
-import type { Options } from '@storybook/core-common';
+import type { Options } from '@storybook/types';
 import type { Plugin } from 'vite';
 import { createFilter } from 'vite';
 
 const isStorybookMdx = (id: string) => id.endsWith('stories.mdx') || id.endsWith('story.mdx');
 
-function injectRenderer(code: string, mdx2: boolean) {
-  if (mdx2) {
-    return `
+function injectRenderer(code: string) {
+  return `
            import React from 'react';
            ${code}
            `;
-  }
-
-  return `
-        /* @jsx mdx */
-        import React from 'react';
-        import { mdx } from '@mdx-js/react';
-        ${code}
-        `;
 }
 
 /**
@@ -29,8 +20,6 @@ function injectRenderer(code: string, mdx2: boolean) {
  * @see https://github.com/storybookjs/storybook/blob/next/addons/docs/docs/recipes.md#csf-stories-with-arbitrary-mdx
  */
 export function mdxPlugin(options: Options): Plugin {
-  const { features } = options;
-
   let reactRefresh: Plugin | undefined;
   const include = /\.mdx?$/;
   const filter = createFilter(include);
@@ -52,15 +41,26 @@ export function mdxPlugin(options: Options): Plugin {
       );
       reactRefresh = reactRefreshPlugins.find((p) => p.transform);
     },
-    async transform(src, id, options) {
+
+    async transform(src, id, transformOptions) {
       if (!filter(id)) return undefined;
 
-      // @ts-expect-error typescript doesn't think compile exists, but it does.
       const { compile } = await import('@storybook/mdx2-csf');
 
-      const mdxCode = String(await compile(src, { skipCsf: !isStorybookMdx(id) }));
+      const mdxLoaderOptions = await options.presets.apply('mdxLoaderOptions', {
+        mdxCompileOptions: {
+          providerImportSource: '@storybook/addon-docs/mdx-react-shim',
+        },
+      });
 
-      const modifiedCode = injectRenderer(mdxCode, true);
+      const mdxCode = String(
+        await compile(src, {
+          skipCsf: !isStorybookMdx(id),
+          ...mdxLoaderOptions,
+        })
+      );
+
+      const modifiedCode = injectRenderer(mdxCode);
 
       // Hooks in recent rollup versions can be functions or objects, and though react hasn't changed, the typescript defs have
       const rTransform = reactRefresh?.transform;
@@ -68,7 +68,7 @@ export function mdxPlugin(options: Options): Plugin {
 
       // It's safe to disable this, because we know it'll be there, since we added it ourselves.
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const result = await transform!.call(this, modifiedCode, `${id}.jsx`, options);
+      const result = await transform!.call(this, modifiedCode, `${id}.jsx`, transformOptions);
 
       if (!result) return modifiedCode;
 

@@ -24,7 +24,7 @@
     "strict": false,
     "strictNullChecks": false,
     "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -33,20 +33,17 @@
       "verdaccio": [
         "./typings.d.ts"
       ]
-    }
+    },
   },
   "exclude": [
     "dist",
     "**/dist",
     "node_modules",
-    "**/node_modules",
-    "**/*.spec.ts",
-    "**/__tests__",
-    "**/*.test.ts",
-    "**/setup-jest.ts"
+    "**/node_modules"
   ],
   "include": [
-    "./**/*"
+    "./**/*",
+    "./.eslintrc.js"
   ],
   "ts-node": {
     "transpileOnly": true,

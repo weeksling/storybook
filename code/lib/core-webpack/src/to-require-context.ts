@@ -1,4 +1,4 @@
-import type { NormalizedStoriesSpecifier } from '@storybook/core-common';
+import type { NormalizedStoriesSpecifier } from '@storybook/types';
 import { globToRegexp } from '@storybook/core-common';
 
 export const toRequireContext = (specifier: NormalizedStoriesSpecifier) => {

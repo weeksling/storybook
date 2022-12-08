@@ -14,6 +14,7 @@
     - [Remote Images](#remote-images)
     - [Optimization](#optimization)
     - [AVIF](#avif)
+  - [Next.js Navigation](#nextjs-navigation)
   - [Next.js Routing](#nextjs-routing)
     - [Overriding defaults](#overriding-defaults)
     - [Global Defaults](#global-defaults)
@@ -38,7 +39,9 @@
 
 👉 [Next.js's Image Component](#nextjss-image-component)
 
-👉 [Next.js Routing](#nextjs-routing)
+👉 [Next.js Routing (next/router)](#nextjs-routing)
+
+👉 [Next.js Navigation (next/navigation)](#nextjs-navigation)
 
 👉 [Sass/Scss](#sassscss)
 
@@ -58,7 +61,7 @@
 
 ## Requirements
 
-- [Next.js](https://nextjs.org/) >= 9.x
+- [Next.js](https://nextjs.org/) >= 12.x
 - [Storybook](https://storybook.js.org/) >= 7.x
 
 ## Getting Started
@@ -167,21 +170,175 @@ export default function Home() {
 }
 ```
 
-#### Optimization
-
-All Next.js `Image`s are automatically [unoptimized](https://nextjs.org/docs/api-reference/next/image#unoptimized) for you.
-
-If [placeholder="blur"](https://nextjs.org/docs/api-reference/next/image#placeholder) is used, the [blurDataURL](https://nextjs.org/docs/api-reference/next/image#blurdataurl) used is the [src](https://nextjs.org/docs/api-reference/next/image#src) of the image (thus effectively disabling the placeholder).
-
-See [this issue](https://github.com/vercel/next.js/issues/18393) for more discussion on how Next.js `Image`s are handled for Storybook.
-
 #### AVIF
 
 This format is not supported by this framework yet. Feel free to [open up an issue](https://github.com/storybookjs/storybook/issues) if this is something you want to see.
 
+### Next.js Navigation
+
+Please note that [next/navigation](https://beta.nextjs.org/docs/upgrade-guide#step-5-migrating-routing-hooks) can only be used in components/pages of the `app` directory of Next.js v13 or higher.
+
+#### Set `nextjs.appDirectory` to `true`
+
+If your story imports components that use `next/navigation`, you need to set the parameter `nextjs.appDirectory` to `true` in your Story:
+
+```js
+// SomeComponentThatUsesTheRouter.stories.js
+import SomeComponentThatUsesTheNavigation from './SomeComponentThatUsesTheNavigation';
+
+export default {
+  component: SomeComponentThatUsesTheNavigation,
+};
+
+// if you have the actions addon
+// you can click the links and see the route change events there
+export const Example = {
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+    },
+  },
+},
+```
+
+If your Next.js project uses the `app` directory for every page (in other words, it does not have a `pages` directory), you can set the parameter `nextjs.appDirectory` to `true` in the [preview.js](https://storybook.js.org/docs/react/configure/overview#configure-story-rendering) file to apply it to all stories.
+
+```js
+// .storybook/preview.js
+
+export const parameters = {
+  nextjs: {
+    appDirectory: true,
+  },
+};
+```
+
+The parameter `nextjs.appDirectory` defaults to `false` if not set.
+
+#### Overriding defaults
+
+Per-story overrides can be done by adding a `nextjs.navigation` property onto the story [parameters](https://storybook.js.org/docs/react/writing-stories/parameters). The framework will shallowly merge whatever you put here into the router.
+
+```js
+// SomeComponentThatUsesTheNavigation.stories.js
+import SomeComponentThatUsesTheNavigation from './SomeComponentThatUsesTheNavigation';
+
+export default {
+  component: SomeComponentThatUsesTheNavigation,
+};
+
+// if you have the actions addon
+// you can click the links and see the route change events there
+export const Example = {
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: {
+        pathname: '/some-default-path',
+        query: {
+          foo: 'bar',
+        },
+      },
+    },
+  },
+};
+```
+
+#### Global Defaults
+
+Global defaults can be set in [preview.js](https://storybook.js.org/docs/react/configure/overview#configure-story-rendering) and will be shallowly merged with the default router.
+
+```js
+// .storybook/preview.js
+
+export const parameters = {
+  nextjs: {
+    appDirectory: true,
+    navigation: {
+      pathname: '/some-default-path',
+      query: {
+        foo: 'bar',
+      },
+    },
+  },
+};
+```
+
+#### Default Navigation Context
+
+The default values on the stubbed navigation context are as follows:
+
+```ts
+const defaultNavigationContext = {
+  push(...args) {
+    action('nextNavigation.push')(...args);
+  },
+  replace(...args) {
+    action('nextNavigation.replace')(...args);
+  },
+  forward(...args) {
+    action('nextNavigation.forward')(...args);
+  },
+  back(...args) {
+    action('nextNavigation.back')(...args);
+  },
+  prefetch(...args) {
+    action('nextNavigation.prefetch')(...args);
+  },
+  refresh: () => {
+    action('nextNavigation.refresh')();
+  },
+  pathname: '/',
+  query: {},
+};
+```
+
+#### Actions Integration Caveats
+
+If you override a function, you lose the automatic action tab integration and have to build it out yourself.
+
+```js
+// .storybook/preview.js
+
+export const parameters = {
+  nextjs: {
+    appDirectory: true,
+    navigation: {
+      push() {
+        // The default implementation that logs the action into the action tab is lost
+      },
+    },
+  },
+};
+```
+
+Doing this yourself looks something like this (make sure you install the `@storybook/addon-actions` package):
+
+```js
+// .storybook/preview.js
+import { action } from '@storybook/addon-actions';
+
+export const parameters = {
+  nextjs: {
+    appDirectory: true,
+    navigation: {
+      push(...args) {
+        // custom logic can go here
+        // this logs to the actions tab
+        action('nextNavigation.push')(...args);
+        // return whatever you want here
+        return Promise.resolve(true);
+      },
+    },
+  },
+};
+```
+
 ### Next.js Routing
 
 [Next.js's router](https://nextjs.org/docs/routing/introduction) is automatically stubbed for you so that when the router is interacted with, all of its interactions are automatically logged to the [Storybook actions tab](https://storybook.js.org/docs/react/essentials/actions) if you have the actions addon.
+
+You should only use `next/router` in the `pages` directory of Next.js v13 or higher. In the `app` directory, it is necessary to use `next/navigation`.
 
 #### Overriding defaults
 
@@ -199,11 +356,13 @@ export default {
 // you can click the links and see the route change events there
 export const Example = {
   parameters: {
-    nextRouter: {
-      path: '/profile/[id]',
-      asPath: '/profile/ryanclementshax',
-      query: {
-        id: 'ryanclementshax',
+    nextjs: {
+      router: {
+        path: '/profile/[id]',
+        asPath: '/profile/ryanclementshax',
+        query: {
+          id: 'ryanclementshax',
+        },
       },
     },
   },
@@ -215,13 +374,15 @@ export const Example = {
 Global defaults can be set in [preview.js](https://storybook.js.org/docs/react/configure/overview#configure-story-rendering) and will be shallowly merged with the default router.
 
 ```js
-// .storybook/main.js
+// .storybook/preview.js
 
 export const parameters = {
-  nextRouter: {
-    path: '/some-default-path',
-    asPath: '/some-default-path',
-    query: {},
+  nextjs: {
+    router: {
+      path: '/some-default-path',
+      asPath: '/some-default-path',
+      query: {},
+    },
   },
 };
 ```
@@ -232,44 +393,52 @@ The default values on the stubbed router are as follows (see [globals](https://s
 
 ```ts
 const defaultRouter = {
-  locale: context?.globals?.locale,
-  route: '/',
-  pathname: '/',
-  query: {},
-  asPath: '/',
-  push(...args: unknown[]) {
+  push(...args) {
     action('nextRouter.push')(...args);
     return Promise.resolve(true);
   },
-  replace(...args: unknown[]) {
+  replace(...args) {
     action('nextRouter.replace')(...args);
     return Promise.resolve(true);
   },
-  reload(...args: unknown[]) {
+  reload(...args) {
     action('nextRouter.reload')(...args);
   },
-  back(...args: unknown[]) {
+  back(...args) {
     action('nextRouter.back')(...args);
   },
-  prefetch(...args: unknown[]) {
+  forward() {
+    action('nextRouter.forward')();
+  },
+  prefetch(...args) {
     action('nextRouter.prefetch')(...args);
     return Promise.resolve();
   },
-  beforePopState(...args: unknown[]) {
+  beforePopState(...args) {
     action('nextRouter.beforePopState')(...args);
   },
   events: {
-    on(...args: unknown[]) {
+    on(...args) {
       action('nextRouter.events.on')(...args);
     },
-    off(...args: unknown[]) {
+    off(...args) {
       action('nextRouter.events.off')(...args);
     },
-    emit(...args: unknown[]) {
+    emit(...args) {
       action('nextRouter.events.emit')(...args);
     },
   },
+  // The locale should be configured [globally](https://storybook.js.org/docs/react/essentials/toolbars-and-globals#globals)
+  locale: globals?.locale,
+  asPath: '/',
+  basePath: '/',
   isFallback: false,
+  isLocaleDomain: false,
+  isReady: true,
+  isPreview: false,
+  route: '/',
+  pathname: '/',
+  query: {},
 };
 ```
 
@@ -278,12 +447,14 @@ const defaultRouter = {
 If you override a function, you lose the automatic action tab integration and have to build it out yourself.
 
 ```js
-// .storybook/main.js
+// .storybook/preview.js
 
 export const parameters = {
-  nextRouter: {
-    push() {
-      // The default implementation that logs the action into the action tab is lost
+  nextjs: {
+    router: {
+      push() {
+        // The default implementation that logs the action into the action tab is lost
+      },
     },
   },
 };
@@ -292,17 +463,19 @@ export const parameters = {
 Doing this yourself looks something like this (make sure you install the `@storybook/addon-actions` package):
 
 ```js
-// .storybook/main.js
+// .storybook/preview.js
 import { action } from '@storybook/addon-actions';
 
 export const parameters = {
-  nextRouter: {
-    push(...args) {
-      // custom logic can go here
-      // this logs to the actions tab
-      action('nextRouter.push')(...args);
-      // return whatever you want here
-      return Promise.resolve(true);
+  nextjs: {
+    router: {
+      push(...args) {
+        // custom logic can go here
+        // this logs to the actions tab
+        action('nextRouter.push')(...args);
+        // return whatever you want here
+        return Promise.resolve(true);
+      },
     },
   },
 };
@@ -401,14 +574,6 @@ You can use your own babel config too. This is an example of how you can customi
       }
     ]
   ]
-}
-```
-
-If you use a monorepo, you may need to add the babel config yourself to your storybook project. Just add a babel config to your storybook project with the following contents to get started.
-
-```json
-{
-  "presets": ["next/babel"]
 }
 ```
 

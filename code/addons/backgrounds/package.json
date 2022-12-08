@@ -1,6 +1,6 @@
 {
   "name": "@storybook/addon-backgrounds",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Switch backgrounds to view components in different settings",
   "keywords": [
     "addon",
@@ -51,6 +51,19 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ],
+      "manager": [
+        "dist/manager.d.ts"
+      ],
+      "preview": [
+        "dist/preview.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist/**/*",
     "README.md",
@@ -62,19 +75,19 @@
     "prep": "../../../scripts/prepare/bundle.ts"
   },
   "dependencies": {
-    "@storybook/addons": "7.0.0-alpha.40",
-    "@storybook/api": "7.0.0-alpha.40",
-    "@storybook/client-logger": "7.0.0-alpha.40",
-    "@storybook/components": "7.0.0-alpha.40",
-    "@storybook/core-events": "7.0.0-alpha.40",
-    "@storybook/csf": "0.0.2--canary.49.258942b.0",
-    "@storybook/theming": "7.0.0-alpha.40",
+    "@storybook/client-logger": "7.0.0-beta.0",
+    "@storybook/components": "7.0.0-beta.0",
+    "@storybook/core-events": "7.0.0-beta.0",
+    "@storybook/manager-api": "7.0.0-beta.0",
+    "@storybook/preview-api": "7.0.0-beta.0",
+    "@storybook/theming": "7.0.0-beta.0",
+    "@storybook/types": "7.0.0-beta.0",
     "global": "^4.4.0",
     "memoizerific": "^1.11.3",
     "ts-dedent": "^2.0.0"
   },
   "devDependencies": {
-    "typescript": "~4.6.3"
+    "typescript": "~4.9.3"
   },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
@@ -98,7 +111,7 @@
       "./src/preview.tsx"
     ]
   },
-  "gitHead": "8f6d8629f1ad7e776c39e2c7621f4a0d538aa93c",
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70",
   "storybook": {
     "displayName": "Backgrounds",
     "icon": "https://user-images.githubusercontent.com/263385/101991667-479cc600-3c7c-11eb-96d3-410e936252e7.png",

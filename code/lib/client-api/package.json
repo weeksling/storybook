@@ -1,6 +1,6 @@
 {
   "name": "@storybook/client-api",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Storybook Client API",
   "keywords": [
     "storybook"
@@ -22,15 +22,15 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/entry.js",
+      "import": "./dist/entry.mjs",
+      "types": "./dist/entry.d.ts"
     },
     "./package.json": "./package.json"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "dist/entry.js",
+  "module": "dist/entry.mjs",
+  "types": "dist/entry.d.ts",
   "files": [
     "dist/**/*",
     "README.md",
@@ -39,36 +39,20 @@
   ],
   "scripts": {
     "check": "../../../scripts/node_modules/.bin/tsc --noEmit",
-    "prep": "../../../scripts/prepare/bundle.ts"
+    "prep": "../../../scripts/prepare/facade.ts"
   },
   "dependencies": {
-    "@storybook/addons": "7.0.0-alpha.40",
-    "@storybook/client-logger": "7.0.0-alpha.40",
-    "@storybook/csf": "0.0.2--canary.49.258942b.0",
-    "@storybook/store": "7.0.0-alpha.40",
-    "@types/qs": "^6.9.5",
-    "@types/webpack-env": "^1.16.4",
-    "global": "^4.4.0",
-    "qs": "^6.10.0",
-    "synchronous-promise": "^2.0.15",
-    "ts-dedent": "^2.0.0",
-    "util-deprecate": "^1.0.2"
-  },
-  "devDependencies": {
-    "@storybook/core-common": "7.0.0-alpha.40",
-    "typescript": "~4.6.3"
-  },
-  "peerDependencies": {
-    "react": "^16.8.0 || ^17.0.0 || ^18.0.0",
-    "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0"
+    "@storybook/client-logger": "7.0.0-beta.0",
+    "@storybook/preview-api": "7.0.0-beta.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "bundler": {
     "entries": [
-      "./src/index.ts"
-    ]
+      "./src/entry.ts"
+    ],
+    "shim": "@storybook/preview-api/dist/client-api"
   },
-  "gitHead": "8f6d8629f1ad7e776c39e2c7621f4a0d538aa93c"
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70"
 }

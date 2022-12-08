@@ -1,7 +1,8 @@
-import { OutputFile } from 'esbuild';
+import type { OutputFile } from 'esbuild';
 import fs from 'fs-extra';
-import { join } from 'path';
-import { Compilation } from '../types';
+import { join, normalize } from 'path';
+import slash from 'slash';
+import type { Compilation } from '../types';
 
 export async function readOrderedFiles(
   addonsDir: string,
@@ -25,7 +26,8 @@ export async function readOrderedFiles(
 
 export function sanitizePath(file: OutputFile, addonsDir: string) {
   const filePath = file.path.replace(addonsDir, '');
-  const location = join(addonsDir, filePath);
-  const url = `./sb-addons${filePath.split('/').map(encodeURIComponent).join('/')}`;
+  const location = normalize(join(addonsDir, filePath));
+  const url = `./sb-addons${slash(filePath).split('/').map(encodeURIComponent).join('/')}`;
+
   return { location, url };
 }

@@ -45,6 +45,8 @@ For example, here's the story from the `Checkbox` example above, rewritten in CS
     'vue/checkbox-story-csf.js.mdx',
     'angular/checkbox-story-csf.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="api/mdx#snippet-checkbox-story-csf"
 />
 
 <!-- prettier-ignore-end -->

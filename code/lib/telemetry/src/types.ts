@@ -1,16 +1,17 @@
-import type { StorybookConfig, TypescriptOptions } from '@storybook/core-common';
+import type { StorybookConfig, TypescriptOptions } from '@storybook/types';
 import type { PM } from 'detect-package-manager';
 
 import type { MonorepoType } from './get-monorepo-type';
 
 export type EventType =
-  | 'start'
+  | 'boot'
+  | 'dev'
   | 'build'
   | 'upgrade'
   | 'init'
-  | 'error-build'
-  | 'error-dev'
-  | 'error-metadata';
+  | 'error'
+  | 'error-metadata'
+  | 'version-update';
 
 export interface Dependency {
   version: string | undefined;
@@ -21,17 +22,16 @@ export interface StorybookAddon extends Dependency {
 }
 
 export type StorybookMetadata = {
-  storybookVersion: string;
+  storybookVersion?: string;
+  storybookVersionSpecifier: string;
   generatedAt?: number;
   language: 'typescript' | 'javascript';
-  framework: {
+  framework?: {
     name: string;
     options?: any;
   };
-  builder?: {
-    name: string;
-    options?: Record<string, any>;
-  };
+  builder?: string;
+  renderer?: string;
   monorepo?: MonorepoType;
   packageManager?: {
     type: PM;
@@ -62,6 +62,7 @@ export interface Options {
   immediate: boolean;
   configDir?: string;
   enableCrashReports?: boolean;
+  stripMetadata?: boolean;
 }
 
 export interface TelemetryData {

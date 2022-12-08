@@ -15,8 +15,10 @@ We can set a parameter for a single story with the `parameters` key on a CSF exp
 <CodeSnippets
   paths={[
    'common/component-story-custom-params.js.mdx',
-   'common/component-story-custom-params.mdx.mdx',
+   'common/component-story-custom-params.ts.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-stories/parameters#snippet-component-story-custom-params"
 />
 
 <!-- prettier-ignore-end -->
@@ -31,13 +33,11 @@ We can set the parameters for all stories of a component using the `parameters` 
   paths={[
     'react/button-story-with-blue-args.js.mdx',
     'react/button-story-with-blue-args.ts.mdx',
-    'react/button-story-with-blue-args.mdx.mdx',
     'vue/button-story-with-blue-args.js.mdx',
-    'vue/button-story-with-blue-args.mdx.mdx',
+    'vue/button-story-with-blue-args.ts-2.ts.mdx',
+    'vue/button-story-with-blue-args.ts-3.ts.mdx',
     'angular/button-story-with-blue-args.ts.mdx',
-    'angular/button-story-with-blue-args.mdx.mdx',
     'svelte/button-story-with-blue-args.js.mdx',
-    'svelte/button-story-with-blue-args.mdx.mdx',
     'web-components/button-story-with-blue-args.js.mdx',
   ]}
 />

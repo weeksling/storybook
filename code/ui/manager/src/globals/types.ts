@@ -1,4 +1,4 @@
-import { ModuleInfo } from '@fal-works/esbuild-plugin-global-externals';
+import type { ModuleInfo } from '@fal-works/esbuild-plugin-global-externals';
 
 // Here we map the name of a module to their NAME in the global scope.
 export enum Keys {
@@ -9,7 +9,8 @@ export enum Keys {
   '@storybook/core-events' = '__STORYBOOKCOREEVENTS__',
   '@storybook/router' = '__STORYBOOKROUTER__',
   '@storybook/theming' = '__STORYBOOKTHEMING__',
-  '@storybook/api' = '__STORYBOOKAPI__',
+  '@storybook/api' = '__STORYBOOKAPI__', // deprecated, remove in 8.0
+  '@storybook/manager-api' = '__STORYBOOKAPI__',
   '@storybook/addons' = '__STORYBOOKADDONS__',
   '@storybook/client-logger' = '__STORYBOOKCLIENTLOGGER__',
 }

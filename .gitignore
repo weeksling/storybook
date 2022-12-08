@@ -7,9 +7,12 @@ dist
 *.DS_Store
 .cache
 junit.xml
+test-results
 /repros
 /sandbox
+/bench
 .verdaccio-cache
+.next
 
 # Yarn stuff
 /**/.yarn/*
@@ -19,3 +22,7 @@ junit.xml
 !/**/.yarn/versions
 /**/.pnp.*
 !/node_modules
+
+# test-storybooks
+test-storybooks/ember-cli/ember-output
+test-storybooks/angular-cli/addon-jest.testresults.json

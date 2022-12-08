@@ -1,13 +1,10 @@
-import { useMemo, useEffect } from '@storybook/addons';
-import type { AnyFramework, PartialStoryFn as StoryFunction, StoryContext } from '@storybook/csf';
+import { useMemo, useEffect } from '@storybook/preview-api';
+import type { Renderer, PartialStoryFn as StoryFunction, StoryContext } from '@storybook/types';
 
 import { clearStyles, addGridStyle } from '../helpers';
 import { PARAM_KEY as BACKGROUNDS_PARAM_KEY } from '../constants';
 
-export const withGrid = (
-  StoryFn: StoryFunction<AnyFramework>,
-  context: StoryContext<AnyFramework>
-) => {
+export const withGrid = (StoryFn: StoryFunction<Renderer>, context: StoryContext<Renderer>) => {
   const { globals, parameters } = context;
   const gridParameters = parameters[BACKGROUNDS_PARAM_KEY].grid;
   const isActive = globals[BACKGROUNDS_PARAM_KEY]?.grid === true && gridParameters.disable !== true;

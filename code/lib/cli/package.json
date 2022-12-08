@@ -1,6 +1,6 @@
 {
   "name": "@storybook/cli",
-  "version": "7.0.0-alpha.40",
+  "version": "7.0.0-beta.0",
   "description": "Storybook's CLI - easiest method of adding storybook to your projects",
   "keywords": [
     "cli",
@@ -41,27 +41,28 @@
     "test": "jest test/**/*.test.js"
   },
   "dependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "@storybook/codemod": "7.0.0-alpha.40",
-    "@storybook/core-common": "7.0.0-alpha.40",
-    "@storybook/core-server": "7.0.0-alpha.40",
-    "@storybook/csf-tools": "7.0.0-alpha.40",
-    "@storybook/node-logger": "7.0.0-alpha.40",
-    "@storybook/telemetry": "7.0.0-alpha.40",
+    "@babel/core": "^7.20.2",
+    "@babel/preset-env": "^7.20.2",
+    "@storybook/codemod": "7.0.0-beta.0",
+    "@storybook/core-common": "7.0.0-beta.0",
+    "@storybook/core-server": "7.0.0-beta.0",
+    "@storybook/csf-tools": "7.0.0-beta.0",
+    "@storybook/node-logger": "7.0.0-beta.0",
+    "@storybook/telemetry": "7.0.0-beta.0",
+    "@storybook/types": "7.0.0-beta.0",
     "@types/semver": "^7.3.4",
     "boxen": "^5.1.2",
     "chalk": "^4.1.0",
     "commander": "^6.2.1",
     "cross-spawn": "^7.0.3",
-    "degit": "^2.8.4",
     "detect-indent": "^6.1.0",
     "envinfo": "^7.7.3",
     "execa": "^5.0.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "find-up": "^5.0.0",
     "fs-extra": "^9.0.1",
     "get-port": "^5.1.1",
+    "giget": "^1.0.0",
     "globby": "^11.0.2",
     "jscodeshift": "^0.13.1",
     "leven": "^3.1.0",
@@ -72,22 +73,21 @@
     "shelljs": "^0.8.5",
     "strip-json-comments": "^3.0.1",
     "ts-dedent": "^2.0.0",
-    "update-notifier": "^5.0.1",
+    "update-notifier": "^6.0.2",
     "util-deprecate": "^1.0.2"
   },
   "devDependencies": {
-    "@storybook/client-api": "7.0.0-alpha.40",
+    "@storybook/client-api": "7.0.0-beta.0",
     "@types/cross-spawn": "^6.0.2",
-    "@types/degit": "^2.8.3",
     "@types/prompts": "^2.0.9",
     "@types/puppeteer-core": "^2.1.0",
     "@types/semver": "^7.3.4",
     "@types/shelljs": "^0.8.7",
-    "@types/update-notifier": "^5.0.0",
+    "@types/update-notifier": "^6.0.1",
     "@types/util-deprecate": "^1.0.0",
     "strip-json-comments": "^3.1.1",
-    "typescript": "~4.6.3",
-    "update-notifier": "^5.0.1"
+    "typescript": "~4.9.3",
+    "update-notifier": "^6.0.2"
   },
   "publishConfig": {
     "access": "public"
@@ -98,5 +98,5 @@
     ],
     "platform": "node"
   },
-  "gitHead": "8f6d8629f1ad7e776c39e2c7621f4a0d538aa93c"
+  "gitHead": "2e4ddde6a0a291266d91fe6a5ecda767bf119e70"
 }

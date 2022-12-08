@@ -16,6 +16,8 @@ Storybook extracts the component's description and renders it at the top of the 
   paths={[
     'common/component-story-csf-description.js.mdx',
   ]}
+  usesCsf3
+  csf2Path="writing-docs/doc-block-description#snippet-component-story-csf-description"
 />
 
 <!-- prettier-ignore-end -->

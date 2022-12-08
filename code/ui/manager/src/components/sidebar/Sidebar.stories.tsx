@@ -4,13 +4,13 @@ import { Sidebar, DEFAULT_REF_ID } from './Sidebar';
 import { standardData as standardHeaderData } from './Heading.stories';
 import * as ExplorerStories from './Explorer.stories';
 import { mockDataset } from './mockdata';
-import { RefType } from './types';
+import type { RefType } from './types';
 
 export default {
   component: Sidebar,
-  title: 'UI/Sidebar/Sidebar',
+  title: 'Sidebar/Sidebar',
   excludeStories: /.*Data$/,
-  parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen', withSymbols: true },
   decorators: [
     ExplorerStories.default.decorators[0],
     (storyFn: any) => <div style={{ padding: '0 20px', maxWidth: '230px' }}>{storyFn()}</div>,
@@ -32,6 +32,7 @@ const refs: Record<string, RefType> = {
     url: 'https://example.com',
     ready: false,
     type: 'lazy',
+    // @ts-expect-error (needs to be converted to CSF3)
     stories,
   },
 };
@@ -40,7 +41,7 @@ export const Simple = () => (
   <Sidebar
     storiesConfigured
     menu={menu}
-    stories={stories}
+    stories={stories as any}
     storyId={storyId}
     refId={refId}
     refs={{}}
@@ -66,7 +67,7 @@ export const WithRefs = () => (
   <Sidebar
     storiesConfigured
     menu={menu}
-    stories={stories}
+    stories={stories as any}
     storyId={storyId}
     refId={refId}
     refs={refs}
@@ -77,7 +78,7 @@ export const LoadingWithRefs = () => (
   <Sidebar
     storiesConfigured={false}
     menu={menu}
-    stories={stories}
+    stories={stories as any}
     storyId={storyId}
     refId={refId}
     refs={refs}

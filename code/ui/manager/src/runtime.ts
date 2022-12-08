@@ -1,10 +1,12 @@
 import global from 'global';
 
-import { addons, AddonStore, Channel } from '@storybook/addons';
-import type { Config, Types } from '@storybook/addons';
+import type { Channel } from '@storybook/channels';
+import type { AddonStore } from '@storybook/manager-api';
+import { addons } from '@storybook/manager-api';
+import type { Addon_Types, Addon_Config } from '@storybook/types';
 import * as postMessage from '@storybook/channel-postmessage';
 import * as webSocket from '@storybook/channel-websocket';
-import Events from '@storybook/core-events';
+import { CHANNEL_CREATED } from '@storybook/core-events';
 import Provider from './provider';
 import { renderStorybookUI } from './index';
 
@@ -16,6 +18,7 @@ const { FEATURES, SERVER_CHANNEL_URL } = global;
 class ReactProvider extends Provider {
   private addons: AddonStore;
 
+  // @ts-expect-error Unused, possibly remove, leaving, because it could be accessed even though it is private
   private channel: Channel;
 
   private serverChannel?: Channel;
@@ -23,13 +26,14 @@ class ReactProvider extends Provider {
   constructor() {
     super();
 
-    const channel = postMessage.createChannel({ page: 'manager' });
+    const postMessageChannel = postMessage.createChannel({ page: 'manager' });
 
-    addons.setChannel(channel);
-    channel.emit(Events.CHANNEL_CREATED);
+    addons.setChannel(postMessageChannel);
+
+    postMessageChannel.emit(CHANNEL_CREATED);
 
     this.addons = addons;
-    this.channel = channel;
+    this.channel = postMessageChannel;
 
     if (FEATURES?.storyStoreV7 && SERVER_CHANNEL_URL) {
       const serverChannel = webSocket.createChannel({ url: SERVER_CHANNEL_URL });
@@ -38,11 +42,11 @@ class ReactProvider extends Provider {
     }
   }
 
-  getElements(type: Types) {
+  getElements(type: Addon_Types) {
     return this.addons.getElements(type);
   }
 
-  getConfig(): Config {
+  getConfig(): Addon_Config {
     return this.addons.getConfig();
   }
 

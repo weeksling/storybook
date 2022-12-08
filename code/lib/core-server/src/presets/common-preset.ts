@@ -1,23 +1,15 @@
 import fs from 'fs-extra';
-import deprecate from 'util-deprecate';
-import {
-  CLIOptions,
-  getPreviewBodyTemplate,
-  getPreviewHeadTemplate,
-  getPreviewMainTemplate,
-  loadEnvs,
-} from '@storybook/core-common';
+import { deprecate } from '@storybook/node-logger';
+import { getPreviewBodyTemplate, getPreviewHeadTemplate, loadEnvs } from '@storybook/core-common';
 import type {
-  Options,
-  CoreConfig,
-  StorybookConfig,
-  StoryIndexer,
+  CLIOptions,
   IndexerOptions,
-} from '@storybook/core-common';
+  StoryIndexer,
+  CoreConfig,
+  Options,
+  StorybookConfig,
+} from '@storybook/types';
 import { loadCsf } from '@storybook/csf-tools';
-
-const warnConfigField = deprecate(() => {},
-`You (or an addon) are using the 'config' preset field. This has been replaced by 'previewAnnotations' and will be removed in 8.0`);
 
 export const babel = async (_: unknown, options: Options) => {
   const { presets } = options;
@@ -43,8 +35,6 @@ export const previewBody = async (base: any, { configDir, presets }: Options) =>
   const interpolations = await presets.apply<Record<string, string>>('env');
   return getPreviewBodyTemplate(configDir, interpolations);
 };
-
-export const previewMainTemplate = () => getPreviewMainTemplate();
 
 export const typescript = () => ({
   check: false,
@@ -91,7 +81,11 @@ export const core = async (existing: CoreConfig, options: Options): Promise<Core
 export const previewAnnotations = async (base: any, options: Options) => {
   const config = await options.presets.apply('config', [], options);
 
-  if (config.length > 0) warnConfigField();
+  if (config.length > 0) {
+    deprecate(
+      `You (or an addon) are using the 'config' preset field. This has been replaced by 'previewAnnotations' and will be removed in 8.0`
+    );
+  }
 
   return [...config, ...base];
 };
@@ -100,13 +94,11 @@ export const features = async (
   existing: StorybookConfig['features']
 ): Promise<StorybookConfig['features']> => ({
   ...existing,
-  postcss: true,
   warnOnLegacyHierarchySeparator: true,
   buildStoriesJson: false,
   storyStoreV7: true,
   breakingChangesV7: true,
   interactionsDebugger: false,
-  babelModeV7: true,
   argTypeTargetsV7: true,
 });
 
